@@ -1,0 +1,91 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  # アンカーはトップレベルに定義できないので、ダミーのサービスで共通設定を管理する
+  - name: _templates
+    host: 127.0.0.1
+    port: 1
+    protocol: http
+    tags: [template, do-not-use]
+
+    # routes:
+      # large_file を適用するサービス時はバッファを無効化して転送を高速化しておく
+      # request_buffering: false
+      # response_buffering: false
+
+    plugins:
+      - &disable_service
+        name: request-termination
+        enabled: false  # サービスを無効化
+        protocols: ["https"]
+        config:
+          status_code: 403
+          message: "Scheduled maintenance in progress"
+      - &large_file
+        name: request-size-limiting
+        protocols: ["https"]
+        config: # 共通値はトップレベルに定義できないので、共有する場合はここをベースにする
+          allowed_payload_size: 0   # 0=制限なし（もしくは 10240=10MB 等）
+          size_unit: megabytes
+
+  # step-ca は content-length を返さない
+  # kong は HTTP/1.1 の場合、それを transfer-encoding: chunked とみなす
+  - name: ca-api
+    host: step-ca
+    port: 9000
+    protocol: http
+    routes:
+      - name: ca-route
+        protocols: [ "https"]
+        hosts: [ "ca.platform.localtest.me" ]
+        preserve_host: true
+        strip_path: false
+        https_redirect_status_code: 308
+
+  - name: auth-api
+    host: pocket-id
+    port: 1411
+    protocol: http
+    routes:
+      - name: auth-route
+        protocols: ["https"]
+        hosts: [ "auth.platform.localtest.me" ]
+        preserve_host: true
+        strip_path: false
+
+  # MinIO Console（UI）
+  - name: minio-console
+    host: minio
+    port: 9001
+    protocol: http
+    routes:
+      - name: console-route
+        protocols: ["https"]
+        hosts: [ "console.platform.localtest.me" ]
+        preserve_host: true
+        strip_path: false
+
+  # S3 API を MinIO に流す
+  - name: minio-s3
+    host: minio
+    port: 9000
+    protocol: http
+    routes:
+      - name: s3-api
+        protocols: ["https"]
+        hosts: [ "s3.platform.localtest.me" ] # パス配下にぶら下げないのが重要
+        preserve_host: true          # Host を書き換えない（SigV4/virtual-hostに必須）
+        strip_path: false
+        methods: [ "GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS" ]
+        request_buffering: false  # バッファを無効化して送受信を高速化
+        response_buffering: false  # バッファを無効化して送受信を高速化
+        plugins:
+          - name: cors
+            config:
+              origins: ["*"]
+              methods: ["GET","PUT","POST","DELETE","HEAD"]
+              headers: ["*"]
+              credentials: false
+              max_age: 3600
+          - <<: *large_file

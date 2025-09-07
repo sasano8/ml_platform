@@ -1,0 +1,95 @@
+services:
+  kong:
+    image: kong:3.6
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: "off"                       # DB-less
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yaml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000 http2, 0.0.0.0:8443 ssl http2
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001 http2, 0.0.0.0:8444 ssl http2
+      KONG_NGINX_PROXY_PROXY_MAX_TEMP_FILE_SIZE: "0"  # NGINX全体でしか適用できない 大きめアップロード向け
+      KONG_LOG_LEVEL: notice
+      KONG_SSL_CERT: /certs/fullchain.wild.platform.localtest.me.crt
+      KONG_SSL_CERT_KEY: /certs/wild.platform.localtest.me.key
+    volumes:
+      - ./configs/kong/kong.yaml:/kong/kong.yaml:ro
+      - ./volumes/step/certs:/certs:ro
+    ports:
+      # - "80:8000"   # Proxy (HTTP)
+      # - "443:8443"   # Proxy (HTTPS)
+      - "8001:8001"   # Admin API (HTTP)
+      - "8444:8444"   # Admin API (HTTPS)
+      - "${KONG_HTTP_PORT}:8000"  # Proxy (HTTP)
+      - "${KONG_HTTPS_PORT}:8443"  # Proxy (HTTPS)
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  step-ca:
+    image: smallstep/step-ca:latest
+    user: "${UID}:${GID}"
+    environment:
+      DOCKER_STEPCA_INIT: 0
+    volumes:
+      - ./volumes/step:/home/step
+    ports:
+      - "8080:9000"
+    # expose:
+    #   - "9000"
+
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v1
+    ports:
+      - 1411:1411
+    # volumes:
+    #   - "./data:/app/data"
+    # env_file: .env
+    environment:
+      APP_URL: https://auth.platform.localtest.me
+      TRUST_PROXY: true  # kong を信用する
+      MAXMIND_LICENSE_KEY:
+      PUID: 1000
+      PGID: 1000
+    healthcheck:
+      test: [ "CMD", "/app/pocket-id", "healthcheck" ]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # バケットの Virtual-Host スタイルを有効化
+      MINIO_DOMAIN: s3.platform.localtest.me
+      # Kong 経由で外部URLを組み立てるための宣言
+      MINIO_SERVER_URL: http://minio:9000
+      MINIO_BROWSER_REDIRECT_URL: https://console.platform.localtest.me
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # MinIO Console
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # volumes:
+    #   - minio-data:/data
+
+  # all-ready:
+  #   image: busybox:latest
+  #   depends_on:
+  #     minio:
+  #       condition: service_healthy
+  #     kong:
+  #       condition: service_healthy
+  #     pocket-id:
+  #       condition: service_healthy
+  #   command: ["true"]
