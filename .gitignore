@@ -1,3 +1,4 @@
 .env
 docker-compose.overrid.yml
 volumes
+__pycache__
