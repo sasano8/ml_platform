@@ -100,3 +100,20 @@ services:
   #     pocket-id:
   #       condition: service_healthy
   #   command: ["true"]
+
+  kube:
+    image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
+    container_name: kube-master
+    hostname: kube-master
+    privileged: true
+    ports:
+      - "6443:6443"
+    restart: unless-stopped
+    # taint: controller 専用とし、pod はデプロイできない
+    command: ["k0s","controller","--enable-worker","--no-taints", "--single"]
+    tmpfs:
+      - /run
+    volumes:
+      - platform-k0s:/var/lib/k0s
+      - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
+      # - /var/log/pods
