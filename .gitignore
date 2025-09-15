@@ -3,3 +3,4 @@ docker-compose.overrid.yml
 volumes
 __pycache__
 .python-version
+.cache

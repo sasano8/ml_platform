@@ -1,6 +1,7 @@
 import httpx
 import pytest
 import json
+import os
 
 skipif = pytest.mark.skipif
 
@@ -17,7 +18,11 @@ class Writer:
 
 @pytest.fixture(scope="session")
 def protocol_report():
-    with open("protocol_report.jsonl", "w") as f:
+    path_file = ".cache/protocol_report.jsonl"
+    path_dir = os.path.dirname(path_file)
+    os.makedirs(path_dir, exist_ok=True)
+
+    with open(path_file, "w") as f:
         yield Writer(f)
 
 
