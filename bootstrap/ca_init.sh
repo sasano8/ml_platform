@@ -23,6 +23,7 @@ docker run --rm -it \
     --name "Localhost" \
     --provisioner admin@example.com
 
-sudo cp ./volumes/step/certs/root_ca.crt /usr/local/share/ca-certificates/root_ca.crt
-sudo update-ca-certificates
+# 元ファイルの所有権のままroot領域に格納
+sudo cp -p ./volumes/step/certs/root_ca.crt /usr/local/share/ca-certificates/root_ca.crt
+sudo update-ca-certificates  # /etc/ssl/certs/ca-certificates.crt に出力される（curl はここを読むが、httpx などは読まない）
 echo Please add root_ca.crt to windows.
