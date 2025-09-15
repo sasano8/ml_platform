@@ -1,8 +1,5 @@
-.PHONY: bootstrap
-bootstrap:
+platform-configurate:
 	@[ -f ".env" ] || ./bootstrap/env_init.sh > .env
-	@./bootstrap/ca_init.sh
-	@./bootstrap/ca_certificate.sh
 
 platform-recreate:
 	@docker compose down
