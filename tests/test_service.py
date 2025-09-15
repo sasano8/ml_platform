@@ -25,27 +25,49 @@ def protocol_report():
 
 
 @pytest.mark.parametrize(
-    ["service_name", "url", "method", "verify", "expect"],
+    ["service_name", "url", "path", "method", "verify", "expect"],
     [
         pytest.param(
             "Step CA",
             "ca.platform.localtest.me",
+            "/health",
             "get",
             False,
-            400,
+            200,
         ),
-        pytest.param("Pocket ID Auth", "auth.platform.localtest.me", "get", True, 200),
         pytest.param(
-            "MinIO Console", "console.platform.localtest.me", "get", True, 200
+            "Pocket ID Auth",
+            "auth.platform.localtest.me",
+            "/.well-known/openid-configuration",
+            "get",
+            True,
+            200,
         ),
-        pytest.param("MinIO S3 API", "s3.platform.localtest.me", "get", True, 403),
+        pytest.param(
+            "MinIO Console",
+            "console.platform.localtest.me",
+            "/api/v1/login",
+            "get",
+            True,
+            200,
+        ),
+        pytest.param(
+            "MinIO S3 API",
+            "s3.platform.localtest.me",
+            "/minio/health/ready",
+            "get",
+            True,
+            200,
+        ),
     ],
 )
-def test_service(protocol_report: Writer, service_name, url, method, verify, expect):
+def test_service(
+    protocol_report: Writer, service_name, url, path, method, verify, expect
+):
     report = {}
     report_additional = {}
     report["method"] = method
-    report["url"] = "https://" + url
+    report["url"] = "https://" + url + path
     report_additional["status_code"] = expect
 
     _res = {"result": False}

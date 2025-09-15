@@ -37,7 +37,7 @@ services:
     volumes:
       - ./volumes/step:/home/step
     ports:
-      - "8080:9000"
+      - "9000:9000"
     # expose:
     #   - "9000"
 
@@ -71,9 +71,9 @@ services:
       # Kong 経由で外部URLを組み立てるための宣言
       MINIO_SERVER_URL: http://minio:9000
       MINIO_BROWSER_REDIRECT_URL: https://console.platform.localtest.me
-    ports:
-      - "9000:9000"  # S3 API
-      - "9001:9001"  # MinIO Console
+    # ports:
+    #   - "9000:9000"  # S3 API
+    #   - "9001:9001"  # MinIO Console
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/ready"]

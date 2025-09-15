@@ -1,6 +1,11 @@
 _format_version: "3.0"
 _transform: true
 
+upstreams:
+  - name: ca.platform.localtest.me
+    targets:
+      - target: step-ca:9000   # 実体（コンテナ名:ポート）
+
 services:
   # アンカーはトップレベルに定義できないので、ダミーのサービスで共通設定を管理する
   - name: _templates
@@ -32,9 +37,9 @@ services:
   # step-ca は content-length を返さない
   # kong は HTTP/1.1 の場合、それを transfer-encoding: chunked とみなす
   - name: ca-api
-    host: step-ca
-    port: 9000
-    protocol: http
+    host: ca.platform.localtest.me
+    protocol: https
+    tls_verify: false
     routes:
       - name: ca-route
         protocols: [ "https"]
