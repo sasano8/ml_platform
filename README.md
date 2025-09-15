@@ -29,12 +29,28 @@ explorer.exe "$(wslpath -w "$PWD/volumes/step/certs")"
 証明書は、信頼されたルート証明機関に配置します。
 
 
-* https://ca.localtest.me/
-* https://auth.localtest.me/signup/setup
-* https://localtest.me:8001: Kong Admin Api
-* https://console.localtest.me: Minio UI
-* https://s3.localtest.me: Minio API
+Powershell から以下のコマンドを実行し、http 200 が返ることを確認します。
 
+```
+curl https://ca.platform.localtest.me/health
+curl https://auth.platform.localtest.me/.well-known/openid-configuration 
+curl https://console.platform.localtest.me/api/v1/login
+curl https://s3.platform.localtest.me/minio/health/ready
+```
+
+
+# メモ
+
+
+* https://s3.platform.localtest.me/
+* https://ca.platform.localtest.me/
+* https://auth.platform.localtest.me/
+
+* https://ca.platform.localtest.me/
+* https://auth.platform.localtest.me/signup/setup
+* https://platform.localtest.me:8001: Kong Admin Api
+* https://console.platform.localtest.me: Minio UI
+* https://s3.platform.localtest.me: Minio API
 
 # はじめに
 
