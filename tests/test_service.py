@@ -37,7 +37,9 @@ def protocol_report():
             400,
         ),
         pytest.param("Pocket ID Auth", "auth.platform.localtest.me", "get", False, 200),
-        pytest.param("MinIO Console", "console.platform.localtest.me", "get", False, 200),
+        pytest.param(
+            "MinIO Console", "console.platform.localtest.me", "get", False, 200
+        ),
         pytest.param("MinIO S3 API", "s3.platform.localtest.me", "get", False, 403),
     ],
 )
