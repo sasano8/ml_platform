@@ -12,3 +12,5 @@
 * [ ] : SSO
 * [ ] : デバイス管理
 * [ ] : token exchange
+* [ ] : localtest から sslip への移行
+  * [ ]: localtet では、あるホストから localtest を参照した時に、127.0.0.1 で解決されるため、別のホストを参照できない

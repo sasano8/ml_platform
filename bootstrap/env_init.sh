@@ -10,3 +10,6 @@ echo MINIO_ROOT_PASSWORD=minioadmin123
 
 echo KONG_HTTP_PORT=80
 echo KONG_HTTPS_PORT=8443
+
+echo KONG_DOMAIN=$(hostname -I | awk '{print $1}' | tr . -).sslip.io
+

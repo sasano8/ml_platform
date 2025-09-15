@@ -41,6 +41,19 @@ curl https://s3.platform.localtest.me/minio/health/ready
 
 # メモ
 
+WSL のアドレスを抽出し、sslip のドメインを組み立てる（env_init.sh に定義済み）。
+
+```
+echo $(hostname -I | awk '{print $1}' | tr . -).sslip.io
+```
+
+```
+http://172-31-97-7.sslip.io:8001/
+```
+
+sslip はワイルドカード証明書の発行が少し難しいらしい。
+
+
 
 * https://s3.platform.localtest.me/
 * https://ca.platform.localtest.me/
