@@ -4,7 +4,11 @@ bootstrap:
 	@./bootstrap/ca_init.sh
 	@./bootstrap/ca_certificate.sh
 
-up:
+container-up:
+	@docker compose up -d
+
+container-restart:
+	@docker compose down
 	@docker compose up -d
 
 test: up
@@ -12,3 +16,7 @@ test: up
 
 test-loop: up
 	@watch -n 10 'uv run pytest -svx .'
+
+git-commit:
+	@uvx ruff format .
+	@git commit -e

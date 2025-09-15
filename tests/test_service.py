@@ -4,6 +4,7 @@ import json
 
 skipif = pytest.mark.skipif
 
+
 class Writer:
     def __init__(self, f):
         self._f = f
@@ -13,6 +14,7 @@ class Writer:
         self._f.write(dumped)
         self._f.write("\n")
 
+
 @pytest.fixture(scope="session")
 def protocol_report():
     with open("protocol_report.jsonl", "w") as f:
@@ -20,19 +22,20 @@ def protocol_report():
 
 
 @pytest.mark.parametrize(
+    ["service_name", "url", "method", "verify", "expect"],
     [
-        "service_name",
-        "url",
-        "method",
-        "verify",
-        "expect"
-    ],
-    [
-        pytest.param("Step CA", "ca.platform.localtest.me", "get", False, 400, marks=skipif(True, reason="503.なぜ？")),
+        pytest.param(
+            "Step CA",
+            "ca.platform.localtest.me",
+            "get",
+            False,
+            400,
+            marks=skipif(True, reason="503.なぜ？"),
+        ),
         ("Pocket ID Auth", "auth.platform.localtest.me", "get", False, 200),
         ("MinIO Console", "console.platform.localtest.me", "get", False, 200),
         ("MinIO S3 API", "s3.platform.localtest.me", "get", False, 403),
-    ]
+    ],
 )
 def test_service(protocol_report: Writer, service_name, url, method, verify, expect):
     report = {}
@@ -57,9 +60,5 @@ def test_service(protocol_report: Writer, service_name, url, method, verify, exp
 
     finally:
         report.update(report_additional)
-        report_result = {
-            "req": report,
-            "res": _res
-        }
+        report_result = {"req": report, "res": _res}
         protocol_report.write_jsonl(report_result)
-
