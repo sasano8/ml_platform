@@ -4,3 +4,4 @@ volumes
 __pycache__
 .python-version
 .cache
+.ruff_cache
