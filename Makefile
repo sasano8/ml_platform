@@ -15,7 +15,7 @@ test: container-restart
 	@uv run pytest -svx .
 
 test-loop: container-restart
-	@watch --color -n 10 'date --iso-8601=seconds; echo "===== run ====="; uv run pytest --color=yes -svx .'
+	@while :; do uv run pytest -svx --color=yes .; echo "\n[EXECUTED]"$$(date --iso-8601=seconds); cat TODO.md; sleep 10; done
 
 git-commit:
 	@uvx ruff format .

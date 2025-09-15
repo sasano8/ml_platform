@@ -35,11 +35,10 @@ def protocol_report():
             "get",
             False,
             400,
-            marks=skipif(True, reason="503.なぜ？"),
         ),
-        ("Pocket ID Auth", "auth.platform.localtest.me", "get", False, 200),
-        ("MinIO Console", "console.platform.localtest.me", "get", False, 200),
-        ("MinIO S3 API", "s3.platform.localtest.me", "get", False, 403),
+        pytest.param("Pocket ID Auth", "auth.platform.localtest.me", "get", False, 200),
+        pytest.param("MinIO Console", "console.platform.localtest.me", "get", False, 200),
+        pytest.param("MinIO S3 API", "s3.platform.localtest.me", "get", False, 403),
     ],
 )
 def test_service(protocol_report: Writer, service_name, url, method, verify, expect):
