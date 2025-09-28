@@ -15,6 +15,8 @@
         * [x] : Chrome での http/2 確認
         * [ ] : Curl での http/2 確認（http1.1 しか対応していない）
     * [ ] : http1.1 確認（一般的に http2 に未対応のクライアントもまだあるので、http1.1を用意した方がいいらしい）
+* http 最適化
+  * [ ] : バッファーを無効化しパススルーのように動作させる
 * kubernetes 連携
   * [x] : docker で動かせる kubernetes 構築
     * [x] : k0s（その他候補: k3s, k3d(k3s のラッパー)）
