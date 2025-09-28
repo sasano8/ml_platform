@@ -1,0 +1,83 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nginx-custom
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+  # - host: '*.apps.platform.localtest.me'  # これは通じない
+  # - host: '*.*.apps.platform.localtest.me'  # Invalid value: "*.*.apps.platform.localtest.me": a wildcard DNS-1123 subdomain must start with '*.'
+  - host: '*.default.apps.platform.localtest.me'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-svc
+            port:
+              number: 80
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginxconf
+data:
+  default.conf: |
+    server {
+    listen 80;
+    server_name  ~^(?<subdomain>.*?)\.default\.apps\.platform\.localtest\.me$;
+    resolver  kube-dns.kube-system.svc.cluster.local  valid=5s;
+    location  / {
+      proxy_pass  http://$subdomain.default.svc.cluster.local;
+      proxy_set_header  Host  $host;
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginxconf

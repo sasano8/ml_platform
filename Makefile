@@ -12,6 +12,14 @@ platform-recreate:
 
 container-up:
 	@docker compose up -d
+	@./bootstrap/kube_deploy.sh
+
+container-down:
+	@docker compose down
+
+container-clean:
+	@docker compose down
+	@docker volume rm platform-k0s 2>/dev/null || true
 
 container-restart:
 	@docker compose down

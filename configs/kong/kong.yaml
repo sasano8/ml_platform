@@ -94,3 +94,14 @@ services:
               credentials: false
               max_age: 3600
           - <<: *large_file
+
+  - name: k8s-ingress
+    host: kube
+    port: 30080
+    routes:
+      - name: route-k8s
+        protocols: [ "http", "https" ]
+        hosts:
+          - "*.default.apps.platform.localtest.me"
+        preserve_host: true
+        strip_path: false

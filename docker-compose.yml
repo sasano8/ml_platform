@@ -1,3 +1,20 @@
+volumes:
+  platform-k0s:
+    name: platform-k0s
+
+# secrets:
+#   api_key:
+#     file: ./secrets/api_key.txt
+
+# services:
+#   db:
+#     image: mysql:latest
+#     environment:
+#       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+#     secrets:
+#       - db_root_password
+
+
 services:
   kong:
     image: kong:3.6
@@ -107,6 +124,8 @@ services:
     hostname: kube-master
     privileged: true
     ports:
+      - "30080:30080"  # for ingress
+      - "30443:30443"  # for ingress
       - "6443:6443"
     restart: unless-stopped
     # taint: controller 専用とし、pod はデプロイできない
@@ -117,3 +136,4 @@ services:
       - platform-k0s:/var/lib/k0s
       - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
       # - /var/log/pods
+      - ./configs/kube:/mnt/kube
