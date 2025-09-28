@@ -58,7 +58,8 @@ sleep 20
 
 IP=$(docker compose exec kube k0s kubectl get svc nginx-svc -o jsonpath='{.spec.clusterIP}')
 docker compose exec kube curl -H 'Host: httpbin.default.apps.platform.localtest.me' http://$IP/get
-docker compose exec kube curl -H 'Host: ws-echo.default.apps.platform.localtest.me' http://$IP/
+docker compose exec kube k0s kubectl run -i --env="NPM_CONFIG_UPDATE_NOTIFIER=false" --rm nodejs --image=node:20-alpine -- sh -lc "npx -y wscat -c ws://$IP/ -H 'Host: ws-echo.default.apps.platform.localtest.me' -x 'hello'"
+
 # docker compose exec kube curl -H 'Host: grpcbin.default.apps.platform.localtest.me' http://$IP/  # Empty reply from server(curl じゃ疎通できない)
 
 
@@ -71,6 +72,7 @@ docker compose exec kube curl -H 'Host: ws-echo.default.apps.platform.localtest.
 curl http://httpbin.default.apps.platform.localtest.me/get
 curl http://ws-echo.default.apps.platform.localtest.me/
 
+docker run -i --net=host -e="NPM_CONFIG_UPDATE_NOTIFIER=false" --rm node:20-alpine sh -lc "npx -y wscat -c ws://ws-echo.default.apps.platform.localtest.me/ -x 'hello'"
 
 
 

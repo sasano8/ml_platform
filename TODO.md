@@ -5,6 +5,8 @@
         * [x] : SSL 検証の成功
         * [x] : http2 確認
         * [ ] : *default.apps.platform.localtest.me 領域の https 化
+        * [x] : nginx を経由した websocket への Upgrade
+        * [x] : kong を経由した websocket への Upgrade
         * [x] : grpc 接続（コンテナに直接 plaintext）
         * [ ] : grpc 接続（kong 経由で plaintext などで接続）
     * Windows 環境
