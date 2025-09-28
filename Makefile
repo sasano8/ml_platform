@@ -25,6 +25,9 @@ container-restart:
 	@docker compose down
 	@docker compose up -d
 
+container-login:
+	@docker compose exec -it kube /bin/ash -l
+
 test:
 	# root_ca（自己署名証明書） 含むバンドル証明書を使う場合
 	# @export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt; while :; do uv run pytest -svx --color=yes .; echo "\n[EXECUTED]"$$(date --iso-8601=seconds); cat TODO.md; sleep 10; done

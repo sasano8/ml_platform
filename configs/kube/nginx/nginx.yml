@@ -17,6 +17,7 @@ kind: Ingress
 metadata:
   name: ingress-nginx-custom
   # annotations:
+  #   nginx.ingress.kubernetes.io/backend-protocol:  "GRPC"
   #   kubernetes.io/ingress.class: nginx
 spec:
   ingressClassName: nginx
@@ -42,14 +43,19 @@ metadata:
 data:
   default.conf: |
     server {
-    listen 80;
-    server_name  ~^(?<subdomain>.*?)\.default\.apps\.platform\.localtest\.me$;
-    resolver  kube-dns.kube-system.svc.cluster.local  valid=5s;
-    location  / {
-      proxy_pass  http://$subdomain.default.svc.cluster.local;
-      proxy_set_header  Host  $host;
+      listen 80;
+      # listen 80 http2;
+      # http2 on;
+      server_name  ~^(?<subdomain>.*?)\.default\.apps\.platform\.localtest\.me$;
+      resolver  kube-dns.kube-system.svc.cluster.local  valid=5s;
+      location  / {
+        proxy_pass  http://$subdomain.default.svc.cluster.local;
+        proxy_set_header  Host  $host;
+        # for grpc
+        # grpc_pass http://$subdomain.default.svc.cluster.local:80;
+        # grpc_set_header   Host  $host;
+        }
       }
-    }
 
 ---
 apiVersion: apps/v1
