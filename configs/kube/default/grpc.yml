@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Service
+metadata: { name: grpcbin }
+spec:
+  # type: ClusterIP
+  selector: { app: grpcbin }
+  ports: [{ port: 80, targetPort: 9000 }]
+
+---
+apiVersion: v1
+kind: Pod
+metadata: 
+  namespace: default
+  name: grpcbin
+  labels:
+    app: grpcbin
+spec:
+  containers:
+  - name: server
+    image: moul/grpcbin
+    # args: ["/grpcbin", "-grpc-port", "8080", "-insecure"]
+    ports: [{containerPort: 9000}]  # 9001(secure)

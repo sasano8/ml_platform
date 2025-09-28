@@ -2,15 +2,26 @@
 
 set -e
 
+# kubectl のエイリアス
+docker compose exec kube sh -lc 'printf "%s\n" "#!/usr/bin/env sh" "exec k0s kubectl \"\$@\"" > /usr/local/bin/kubectl'
+docker compose exec kube chmod +x /usr/local/bin/kubectl
+
 # curl のインストール
 docker compose exec kube apk add curl
 docker compose exec kube apk add helm
 
 # サンプルアプリのインストール
+docker compose exec kube k0s kubectl delete -f /mnt/kube/default --recursive || true
 docker compose exec kube k0s kubectl apply -f /mnt/kube/default --recursive
 sleep 20
 IP=$(docker compose exec kube k0s kubectl get svc httpbin -o jsonpath='{.spec.clusterIP}')
 docker compose exec kube curl -H httpbin.default.apps.platform.localtest.me http://$IP/get
+
+# grpc の確認。-insecure もあるが、これは証明書の検証をスキップするだけで、証明書による暗号化をしないというわけではない
+docker compose exec kube k0s kubectl run -it --rm grpcurl --image=fullstorydev/grpcurl --restart=Never -- -plaintext grpcbin.default.svc.cluster.local:80 list
+
+# IP=$(docker compose exec kube k0s kubectl get svc ws-echo -o jsonpath='{.spec.clusterIP}')
+# docker compose exec kube curl -H ws-echo.default.apps.platform.localtest.me http://$IP/get
 
 
 # アンインストール
