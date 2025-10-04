@@ -1,17 +1,4 @@
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: nginx-svc
-spec:
-  selector:
-    app: nginx
-  ports:
-    - protocol: TCP
-      port: 443
-      targetPort: 443
-      name: nginx
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -39,6 +26,20 @@ spec:
             name: nginx-svc
             port:
               number: 443
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+      name: nginx
 
 ---
 apiVersion: v1
