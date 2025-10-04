@@ -16,7 +16,7 @@ make platform-recreate
 Windows 環境の場合、Windows で証明書登録作業を行います。
 
 * 証明書は、`Localhost Root CA` として登録されます。
-* 別の `Localhost Root CA` が登録されている場合、`Windows + certmgr.msc` 証明書マネージャーを開き、該当の証明書を削除します。
+* 別の `Localhost Root CA` が登録されている場合、`Windows + R` -> `certmgr.msc` で証明書マネージャーを開き、該当の証明書を削除します。
 
 
 WSL の場合は、以下のようにディレクトリを開きます。

@@ -2,6 +2,12 @@
 
 set -e
 
+# 証明書の登録
+docker compose exec kube k0s kubectl delete secret nginx-internal-tls || true
+docker compose exec kube k0s kubectl create secret tls nginx-internal-tls \
+  --cert=/certs/wild.platform.localtest.me.crt \
+  --key=/certs/wild.platform.localtest.me.key
+
 # 疎通確認用ツールのインストール
 go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 GRPCCURL=$(go env GOPATH)/bin/grpcurl

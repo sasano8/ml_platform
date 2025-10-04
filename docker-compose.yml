@@ -100,12 +100,26 @@ services:
     # volumes:
     #   - minio-data:/data
 
+  # コミュニティエディションでは docker, pypi など未サポートなので gitlab とかでいいや
   # https://jfrog.com/help/r/artifactory-docker-compose/steps-to-install
-  artifactory:
-    image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.117.15
-    ports:
-      - "8081:8081"  # API
-      - "8070:8070"  # UI
+  # artifactory:
+  #   # image: releases-docker.jfrog.io/jfrog/artifactory-cpp-ce:7.77.5  # これは動いたが c++ などのレジストリしかない（コミュニティエディションでは docker, pypi など未サポート）
+  #   # image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.117.15  # 動かない（プロだからライセンスキーが必要）
+  #   ports:
+  #     - "8081:8081"  # API
+  #     - "8070:8070"  # UI? 接続できない
+  #     - "8082:8082"  # 接続できない
+  #   environment:
+  #     # JF_ROUTER_ENTRYPOINTS_EXTERNAL: "http://localhost:8082"
+  #     JF_ROUTER_ENTRYPOINTS_EXTERNALPORT: "8082"
+  #     EXTRA_JAVA_OPTIONS: "-Xms1g -Xmx2g"
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "50m"
+  #       max-file: "10"
+    # volumes:
+    #   - artifactory-data:/var/opt/jfrog/artifactory
 
   # all-ready:
   #   image: busybox:latest
@@ -137,3 +151,4 @@ services:
       - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
       # - /var/log/pods
       - ./configs/kube:/mnt/kube
+      - ./volumes/step/certs:/certs:ro

@@ -13,6 +13,7 @@ docker compose exec step-ca step ca certificate \
   --root /home/step/certs/root_ca.crt \
   --san "platform.localtest.me" \
   --san "*.platform.localtest.me" \
+  --san "*.default.apps.platform.localtest.me" \
   --provisioner-password-file /home/step/secrets/password
 
 
