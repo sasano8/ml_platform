@@ -95,12 +95,29 @@ services:
               max_age: 3600
           - <<: *large_file
 
-  - name: k8s-ingress
+  - name: k8s-ingress-https
     host: kube
-    port: 30080
+    port: 30443
+    protocol: https
+    tls_verify: null
+
     routes:
-      - name: route-k8s
-        protocols: [ "http", "https" ]
+      - name: route-k8s-https
+        protocols: [ "https" ]
+        hosts:
+          - "*.default.apps.platform.localtest.me"
+        preserve_host: true
+        strip_path: false
+
+  - name: k8s-ingress-grpcs
+    host: kube
+    port: 30443
+    protocol: grpcs
+    tls_verify: null
+
+    routes:
+      - name: route-k8s-grpcs
+        protocols: [ "grpcs" ]
         hosts:
           - "*.default.apps.platform.localtest.me"
         preserve_host: true

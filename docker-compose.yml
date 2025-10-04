@@ -136,6 +136,10 @@ services:
     image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
     container_name: kube-master
     hostname: kube-master
+    networks:
+      default:
+        aliases:
+          - default.apps.platform
     privileged: true
     ports:
       - "30080:30080"  # for ingress

@@ -8,18 +8,6 @@ docker compose exec kube k0s kubectl create secret tls nginx-internal-tls \
   --cert=/certs/wild.platform.localtest.me.crt \
   --key=/certs/wild.platform.localtest.me.key
 
-# 疎通確認用ツールのインストール
-go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-GRPCCURL=$(go env GOPATH)/bin/grpcurl
-echo $GRPCCURL
-
-# kubectl のエイリアス
-docker compose exec kube sh -lc 'printf "%s\n" "#!/usr/bin/env sh" "exec k0s kubectl \"\$@\"" > /usr/local/bin/kubectl'
-docker compose exec kube chmod +x /usr/local/bin/kubectl
-
-# curl のインストール
-docker compose exec kube apk add curl
-docker compose exec kube apk add helm
 
 # サンプルアプリのインストール
 docker compose exec kube k0s kubectl delete -f /mnt/kube/default --recursive || true
