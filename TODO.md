@@ -11,7 +11,9 @@
         * [x] : grpc 接続（コンテナに直接 plaintext）
         * [x] : grpc 接続（kong 経由で接続）
         * [ ] : grpc, https 両対応（現状は ingress, nginx で httpsかgrpcsか切り替えて、どちらかしか有効にならない
-          * kind: Gateway を使うと両対応できるかもしれない
+          * nginx での if は難あり
+          * kind: Gateway を使うと両対応できるかもしれない。ingress は HTTPS or GRPCS なのでどうにもならない
+          * そんなことより kourier とか使った方がいい
     * Windows 環境
         * [x] : SSL 検証の成功
         * [x] : Chrome での http/2 確認
