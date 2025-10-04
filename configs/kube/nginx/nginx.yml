@@ -17,8 +17,8 @@ kind: Ingress
 metadata:
   name: ingress-nginx-custom
   annotations:
-    # nginx.ingress.kubernetes.io/backend-protocol:  "GRPCS"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # nginx.ingress.kubernetes.io/backend-protocol:  "GRPCS"
     nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
     nginx.ingress.kubernetes.io/proxy-ssl-server-name: "on"
     nginx.ingress.kubernetes.io/proxy-ssl-name: "$host"
@@ -29,8 +29,6 @@ spec:
         - '*.default.apps.platform.localtest.me'
       secretName: nginx-internal-tls
   rules:
-  # - host: '*.apps.platform.localtest.me'  # これは通じない
-  # - host: '*.*.apps.platform.localtest.me'  # Invalid value: "*.*.apps.platform.localtest.me": a wildcard DNS-1123 subdomain must start with '*.'
   - host: '*.default.apps.platform.localtest.me'
     http:
       paths:
@@ -50,7 +48,6 @@ metadata:
 data:
   default.conf: |
     server {
-      # listen 80;
       listen 443 ssl;
       http2 on;
 
