@@ -156,3 +156,4 @@ services:
       # - /var/log/pods
       - ./configs/kube:/mnt/kube
       - ./volumes/step/certs:/certs:ro
+    
