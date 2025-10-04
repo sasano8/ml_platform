@@ -7,7 +7,7 @@
         * [x] : *default.apps.platform.localtest.me 領域の https 化
         * [x] : nginx を経由した websocket への Upgrade
         * [x] : kong を経由した websocket への Upgrade
-        * [ ] : websocketking.com を経由した websocket への接続（多分ブラウザは wss でないと接続を許可しない）
+        * [x] : websocketking.com を経由した websocket への接続（ブラウザは wss でないと接続を許可しない）
         * [x] : grpc 接続（コンテナに直接 plaintext）
         * [x] : grpc 接続（kong 経由で接続）
         * [ ] : grpc, https 両対応（現状は ingress, nginx で httpsかgrpcsか切り替えて、どちらかしか有効にならない

@@ -122,3 +122,6 @@ services:
           - "*.default.apps.platform.localtest.me"
         preserve_host: true
         strip_path: false
+        headers:
+          content-type:
+            - ~*^application/grpc
