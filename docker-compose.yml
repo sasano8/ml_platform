@@ -133,13 +133,19 @@ services:
   #   command: ["true"]
 
   kube:
-    image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
+    # image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
+    build:
+      context: ./containers/k0s
     container_name: kube-master
     hostname: kube-master
+    environment:
+      # APP_DOMAIN: default.apps.platform
+      APP_DOMAIN: knative.platform
     networks:
       default:
         aliases:
-          - default.apps.platform
+          # - default.apps.platform
+          - knative.platform
     privileged: true
     ports:
       - "30080:30080"  # for ingress

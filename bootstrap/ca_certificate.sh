@@ -14,6 +14,7 @@ docker compose exec step-ca step ca certificate \
   --san "platform.localtest.me" \
   --san "*.platform.localtest.me" \
   --san "*.default.apps.platform.localtest.me" \
+  --san "*.default.knative.platform.localtest.me" \
   --provisioner-password-file /home/step/secrets/password
 
 

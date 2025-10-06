@@ -10,6 +10,14 @@ platform-recreate:
 	@sleep 10
 	@make test
 
+container-build:
+	@docker compose down kube
+	@docker volume rm platform-k0s 2>/dev/null || true
+	@docker compose build kube --progress plain
+	@docker compose up -d kube
+	@sleep 30
+	@docker compose exec kube /root/setup/02_kube_setup_kanative.sh
+
 container-up:
 	@docker compose up -d
 	@./bootstrap/kube_deploy.sh
