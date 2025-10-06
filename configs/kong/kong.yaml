@@ -125,3 +125,17 @@ services:
         headers:
           content-type:
             - ~*^application/grpc
+
+  - name: knative-ingress
+    host: kube
+    port: 30080
+    protocol: http
+    # tls_verify: null
+
+    routes:
+      - name: route-k8s-knative
+        protocols: [ "http" ]
+        hosts:
+          - "*.knative.platform.localtest.me"
+        preserve_host: true
+        strip_path: false

@@ -7,7 +7,7 @@ set -e
 # certificate-authority-data がかけるのでなにか予期しないことがおきるかも？
 # 初回起動前に存在しないので起動後に実行する
 KUBECONFIG=/var/lib/k0s/kubelet.conf kubectl config set-cluster default --server=https://127.0.0.1:6443
-HOST_DOMAIN=$APP_DOMAIN
+APP_DOMAIN=$APP_DOMAIN
 
 # ingress に kourier を指定
 kubectl patch configmap/config-network \
@@ -41,6 +41,7 @@ kubectl -n kourier-system patch svc kourier --type merge -p '{
 
 
 
+kubectl get nodes -o wide
 kubectl -n kourier-system get endpoints kourier -o wide
 kubectl -n kourier-system get pod -o wide
 kubectl -n kourier-system get service
@@ -59,7 +60,7 @@ kubectl apply -f /var/lib/k0s/manifests/knative/hello-knative.yaml
 kubectl wait --for=condition=Ready kservice/hello-knative -n default --timeout=180s
 
 # curl -v -H "Host: hello-knative.default.knative.platform.localtest.me" http://127.0.0.1:8081
-curl -v -H "Host: hello-knative.default.knative.platform.localtest.me" http://$HOST_DOMAIN:30080
+curl -v -H "Host: hello-knative.default.knative.platform.localtest.me" http://$APP_DOMAIN:30080
 # curl -H "Host: hello-knative.default.knative.platform.localtest.me" http://172.23.0.1:30080
 
 # curl http://hello.default.knative.platform.localtest.me:30080

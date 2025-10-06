@@ -6,6 +6,13 @@
 make platform-configurate
 ```
 
+アプリケーション実行基盤(knative)をセットアップします。
+
+```
+make container-build
+```
+
+
 platform を構築します。
 `update-ca-certificates` が実行されるため、sudo パスワードを入力します。
 
@@ -27,6 +34,13 @@ explorer.exe "$(wslpath -w "$PWD/volumes/step/certs")"
 
 `root_ca.crt` をダブルクリックし、証明書のインストールをします。
 証明書は、信頼されたルート証明機関に配置します。
+
+
+ブラウザから以下のURLから hello が返ることを確認します。
+
+```
+https://hello-knative.default.knative.platform.localtest.me
+```
 
 
 Powershell から以下のコマンドを実行し、http 200 が返ることを確認します。
