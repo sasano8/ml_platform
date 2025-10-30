@@ -1,5 +1,45 @@
 # Getting Started
 
+
+gomplate をインストールする。
+
+```
+sudo ./tools/download_gomplate.sh $(python3 tools/get_osinfo.py)
+```
+
+衝突しないネットワーク範囲を探す
+
+```
+docker network inspect -f '{{.Name}} {{range .IPAM.Config}}{{.Subnet}} {{end}}' $(docker network ls -q)
+```
+
+```
+python3 tools/conf_generate.py --external_host 172.30.0.2 > .env.json
+```
+
+```
+gomplate -d cfg=.env.json -f tools/docker-compose.tmpl.yml -o docker-compose.yml
+```
+
+
+```
+docker compose up -d kube
+```
+
+hello-world の動作確認。
+一回目は失敗するかもしれません。
+
+```
+docker compose exec -it kube /root/setup/02_kube_setup_kanative.sh
+```
+
+
+
+
+
+
+# Getting Started
+
 `.env` を生成し、必要に応じて値を編集します。
 
 ```

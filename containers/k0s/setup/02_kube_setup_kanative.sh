@@ -6,8 +6,22 @@ set -e
 # これは ip 変更時に動かなくなることを回避（ローカルホストで常に見つかるように）する
 # certificate-authority-data がかけるのでなにか予期しないことがおきるかも？
 # 初回起動前に存在しないので起動後に実行する
-KUBECONFIG=/var/lib/k0s/kubelet.conf kubectl config set-cluster default --server=https://127.0.0.1:6443
+# KUBECONFIG=/var/lib/k0s/kubelet.conf kubectl config set-cluster default --server=https://127.0.0.1:6443
 APP_DOMAIN=$APP_DOMAIN
+
+# シンボリックリンクは動かない
+cd -- "$(dirname -- "$0")" || exit 1
+
+# apiserverが立ち上がるのを待つ
+echo "[wait] apiserver"
+until kubectl get --raw='/readyz' >/dev/null 2>&1; do
+  sleep 1
+  echo "[wait] apiserver"
+done
+
+# ノードが立ち上がるのを待つ
+echo "[wait] kube node"
+kubectl wait node --all --for=condition=Ready --timeout=60m
 
 # ingress に kourier を指定
 kubectl patch configmap/config-network \
@@ -19,15 +33,8 @@ kubectl patch configmap/config-network \
 kubectl patch configmap/config-domain \
   --namespace knative-serving \
   --type merge \
-  --patch '{"data":{"knative.platform.localtest.me":""}}'
+  --patch '{"data":{"'$APP_DOMAIN'":""}}'
 
-# これは動かなかった
-# kubectl -n kourier-system patch svc kourier --type merge -p '{
-#   "spec":{"type":"NodePort",
-#     "ports":[
-#       {"name":"http2","port":80,"nodePort":30080},
-#       {"name":"https","port":443,"nodePort":30443}
-# ]}}'
 
 # ingressPort -> nodePort -> targetPort の設定
 kubectl -n kourier-system patch svc kourier --type merge -p '{
@@ -56,14 +63,23 @@ kubectl -n knative-serving get cm config-network -o jsonpath='{.data.ingress-cla
 kubectl wait -n knative-serving deploy/webhook \
   --for=condition=Available --timeout=5m
 
-kubectl apply -f /var/lib/k0s/manifests/knative/hello-knative.yaml
-kubectl wait --for=condition=Ready kservice/hello-knative -n default --timeout=180s
+kubectl apply -f ./hello-kservice.yaml
+kubectl wait --for=condition=Ready kservice/hello-kservice -n default --timeout=180s
+kubectl get ksvc
+kubectl wait -n default --for=condition=Ready pod -l 'serving.knative.dev/service=hello-kservice' --timeout=180s
+kubectl get pods
 
-# curl -v -H "Host: hello-knative.default.knative.platform.localtest.me" http://127.0.0.1:8081
-curl -v -H "Host: hello-knative.default.knative.platform.localtest.me" http://$APP_DOMAIN:30080
-# curl -H "Host: hello-knative.default.knative.platform.localtest.me" http://172.23.0.1:30080
+echo "[wait] kourier endpoints"
+kubectl get endpoints -n kourier-system
+kubectl wait -n kourier-system --for=jsonpath='{.subsets[0].addresses[0].ip}' endpoints/kourier --timeout=180m
+kubectl get endpoints -n kourier-system
 
-# curl http://hello.default.knative.platform.localtest.me:30080
+# できればかならず成功する状態を判定してから実行したい
+echo "Waiting for route to accept traffic at http://hello-kservice.default.$APP_DOMAIN:30080"
+# f: 4xx/5xx エラーで失敗扱いにする s: 進捗バーなど非表示
+until curl -v -fs http://hello-kservice.default.$APP_DOMAIN:30080; do
+  sleep 5
+done
 
 
 # apk add dnsmasq

@@ -8,7 +8,7 @@ RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/te
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 RUN mv ./kubectl /usr/local/bin && chmod +x /usr/local/bin/kubectl
 
-ARG APP_DOMAIN="knative.platform.localtest.me"
+# ARG APP_DOMAIN="knative.platform.localtest.me"
 WORKDIR /root
 
 COPY ./setup ./setup
