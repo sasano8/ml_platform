@@ -1,5 +1,6 @@
 # Getting Started
 
+## 前提ツールの導入
 
 gomplate をインストールする。
 
@@ -7,31 +8,38 @@ gomplate をインストールする。
 sudo ./tools/download_gomplate.sh $(python3 tools/get_osinfo.py)
 ```
 
+## knative の起動
+
 衝突しないネットワーク範囲を探す
 
 ```
 docker network inspect -f '{{.Name}} {{range .IPAM.Config}}{{.Subnet}} {{end}}' $(docker network ls -q)
 ```
 
+docker-compose.yml に埋め込む変数を生成します。
+
 ```
 python3 tools/conf_generate.py --external_host 172.30.0.2 > .env.json
 ```
 
+k0s + knative の起動とセットアップを行います。
+
 ```
-gomplate -d cfg=.env.json -f tools/docker-compose.tmpl.yml -o docker-compose.yml
+make k0s-up
+```
+
+kservice の疎通確認を行うので以下の応答例を参考に、HTTP ステータス 200 が返り、`Hello Edge!!!` の応答を確認してください。
+
+```
+* Connected to hello-kservice.default.172-30-0-2.sslip.io (172.30.0.2) port 30080
+* using HTTP/1.x
+> GET / HTTP/1.1
+HTTP/1.1 200 OK
+Hello Edge!!!
 ```
 
 
-```
-docker compose up -d kube
-```
-
-hello-world の動作確認。
-一回目は失敗するかもしれません。
-
-```
-docker compose exec -it kube /root/setup/02_kube_setup_kanative.sh
-```
+## kong の起動
 
 
 

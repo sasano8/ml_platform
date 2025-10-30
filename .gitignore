@@ -5,3 +5,4 @@ __pycache__
 .python-version
 .cache
 .ruff_cache
+.env.json

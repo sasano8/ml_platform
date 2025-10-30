@@ -1,3 +1,8 @@
+k0s-up:
+	@gomplate -d cfg=.env.json -f tools/docker-compose.tmpl.yml -o docker-compose.yml
+	@docker compose up -d kube
+	@docker compose exec -it kube /root/setup/02_kube_setup_kanative.sh
+
 platform-configurate:
 	@[ -f ".env" ] || ./bootstrap/env_init.sh > .env
 
