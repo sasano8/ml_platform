@@ -32,8 +32,8 @@ kubectl patch configmap/config-network \
 # 外部ドメインの指定
 kubectl patch configmap/config-domain \
   --namespace knative-serving \
-  --type merge \
-  --patch '{"data":{"'$APP_DOMAIN'":""}}'
+  --type=json \
+  -p='[{"op":"replace","path":"/data","value":{"'$APP_DOMAIN'":""}}]'
 
 
 # ingressPort -> nodePort -> targetPort の設定
@@ -60,26 +60,34 @@ kubectl -n knative-serving get cm config-network -o jsonpath='{.data.ingress-cla
 # kubectl -n default get pod -l serving.knative.dev/service=hello
 
 # knative が有効になるまで待機
-kubectl wait -n knative-serving deploy/webhook \
-  --for=condition=Available --timeout=5m
-
-kubectl apply -f ./hello-kservice.yaml
-kubectl wait --for=condition=Ready kservice/hello-kservice -n default --timeout=180s
-kubectl get ksvc
-kubectl wait -n default --for=condition=Ready pod -l 'serving.knative.dev/service=hello-kservice' --timeout=180s
-kubectl get pods
+kubectl wait -n knative-serving deploy/webhook --for=condition=Available --timeout=60m
 
 echo "[wait] kourier endpoints"
 kubectl get endpoints -n kourier-system
 kubectl wait -n kourier-system --for=jsonpath='{.subsets[0].addresses[0].ip}' endpoints/kourier --timeout=180m
 kubectl get endpoints -n kourier-system
 
-# できればかならず成功する状態を判定してから実行したい
-echo "Waiting for route to accept traffic at http://hello-kservice.default.$APP_DOMAIN:30080"
+kubectl apply -f ./hello-ksvc-http.yaml
+kubectl wait --for=condition=Ready kservice/hello-ksvc-http -n default --timeout=180s
+kubectl wait -n default --for=condition=Ready pod -l 'serving.knative.dev/service=hello-ksvc-http' --timeout=180s
+
+NODEIP=localhost
+
+echo "Waiting for route to accept traffic at Host: hello-ksvc-http.default.$APP_DOMAIN http://$NODEIP:30080"
 # f: 4xx/5xx エラーで失敗扱いにする s: 進捗バーなど非表示
-until curl -v -fs http://hello-kservice.default.$APP_DOMAIN:30080; do
+until curl -v -fs -H "Host: hello-ksvc-http.default.$APP_DOMAIN" http://$HOSTNAME:30080; do
   sleep 5
 done
+
+kubectl apply -f ./hello-ksvc-grpc.yml
+
+echo "Waiting for route to accept traffic at Host: ello-ksvc-grpc.default.$APP_DOMAIN http://$NODEIP:30080"
+until grpcurl -v -plaintext -authority "hello-ksvc-grpc.default.$APP_DOMAIN" $NODEIP:30080 list; do
+  sleep 5
+done
+
+kubectl get ksvc
+kubectl get pods
 
 
 # apk add dnsmasq

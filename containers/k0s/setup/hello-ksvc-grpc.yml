@@ -1,7 +1,8 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: hello-kservice
+  namespace: default
+  name: hello-ksvc-grpc
 spec:
   template:
     metadata:
@@ -9,7 +10,7 @@ spec:
         autoscaling.knative.dev/minScale: "1"
     spec:
       containers:
-        - image: ghcr.io/knative/helloworld-go:latest
-          env:
-            - name: TARGET
-              value: "Edge!!"
+        - image: moul/grpcbin
+          ports:
+            - name: h2c
+              containerPort: 9000

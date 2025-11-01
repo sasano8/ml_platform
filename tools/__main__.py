@@ -78,6 +78,8 @@ def conf_init(network: str, driver: str, subnet: str, gateway: str, output: str)
                 # "wildcarddomain": "sslip.io",
                 # "external_domain": "172-30-0-2.sslip.io",
             },
+            "kong": {
+            },
             "minio": {
                 "minio_root_user": "minioadmin",
                 "minio_root_password": "minioadmin123",
@@ -145,19 +147,20 @@ def calculate(data: dict):
 
 
 def merge(data: dict, exclude=["network"]):
+    import copy
     _exclude = set(exclude)
     merged = {}
     for k, v in data["def"].items():
         if k in _exclude:
             continue
 
-        merged[k] = v
+        merged[k] = copy.deepcopy(v)
 
     for k, v in data["calculate"].items():
         if k in _exclude:
             continue
 
-        current = merged[k]
+        current = merged.setdefault(k, {})
 
         for _k, _v in v.items():
             current[_k] = _v
@@ -166,7 +169,7 @@ def merge(data: dict, exclude=["network"]):
         if k in _exclude:
             continue
 
-        current = merged[k]
+        current = merged.setdefault(k, {})
 
         for _k, _v in v.items():
             current[_k] = _v
