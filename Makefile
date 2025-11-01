@@ -3,6 +3,12 @@ k0s-up:
 	@docker compose up -d kube
 	@docker compose exec -it kube /root/setup/02_kube_setup_kanative.sh
 
+kong-restart:
+	@docker compose down kong
+	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
+	@docker compose up -d kong
+	@curl -v -fs -H "Host: hello-ksvc-http.default.172-31-97-7.sslip.io" http://localhost
+
 platform-configurate:
 	@[ -f ".env" ] || ./bootstrap/env_init.sh > .env
 

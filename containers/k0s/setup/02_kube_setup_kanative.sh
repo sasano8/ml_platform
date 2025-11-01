@@ -81,7 +81,7 @@ done
 
 kubectl apply -f ./hello-ksvc-grpc.yml
 
-echo "Waiting for route to accept traffic at Host: ello-ksvc-grpc.default.$APP_DOMAIN http://$NODEIP:30080"
+echo "Waiting for route to accept traffic at Host: hello-ksvc-grpc.default.$APP_DOMAIN http://$NODEIP:30080"
 until grpcurl -v -plaintext -authority "hello-ksvc-grpc.default.$APP_DOMAIN" $NODEIP:30080 list; do
   sleep 5
 done

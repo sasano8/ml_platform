@@ -1,0 +1,75 @@
+volumes:
+  platform-k0s:
+    name: platform-k0s
+
+
+networks:
+  # ip が変わると kubernetes が動かなくなるので 固定ipで管理
+  fixed_compose_network:
+    name: fixed_compose_network
+    external: true
+
+services:
+  kube:
+    # image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
+    build:
+      context: ./containers/k0s
+    # container_name: kube-master
+    # hostname: kube-master
+    environment:
+      APP_DOMAIN: {{ (ds "cfg").merged.kube.knative_alias | quote }}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      fixed_compose_network:
+        ipv4_address: {{ (ds "cfg").merged.kube.knative_address | quote }}
+#        aliases:
+#          - {{ (ds "cfg").merged.kube.knative_alias | quote }}
+    privileged: true
+    ports:
+      - "30080:30080"  # for ingress
+      - "30443:30443"  # for ingress
+      - "6443:6443"
+    restart: unless-stopped
+    # taint: controller 専用とし、pod はデプロイできない
+    command: ["k0s","controller","--enable-worker","--no-taints", "--single"]
+    tmpfs:
+      - /run
+    volumes:
+      - platform-k0s:/var/lib/k0s
+      - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
+      # - /var/log/pods
+      - ./configs/kube:/mnt/kube
+      - ./volumes/step/certs:/certs:ro
+
+  kong:
+    networks:
+      - fixed_compose_network
+    image: kong:3.6
+    # depends_on:
+    #   minio:
+    #     condition: service_healthy
+    environment:
+      KONG_DATABASE: "off"                       # DB-less
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yaml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000 http2, 0.0.0.0:8443 ssl http2
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001 http2, 0.0.0.0:8444 ssl http2
+      KONG_NGINX_PROXY_PROXY_MAX_TEMP_FILE_SIZE: "0"  # NGINX全体でしか適用できない 大きめアップロード向け
+      KONG_LOG_LEVEL: notice
+      # KONG_SSL_CERT: /certs/fullchain.wild.platform.localtest.me.crt
+      # KONG_SSL_CERT_KEY: /certs/wild.platform.localtest.me.key
+    volumes:
+      - ./configs/kong/kong.yaml:/kong/kong.yaml:ro
+      # - ./volumes/step/certs:/certs:ro
+    ports:
+      # - "80:8000"   # Proxy (HTTP)
+      # - "443:8443"   # Proxy (HTTPS)
+      - "8001:8001"   # Admin API (HTTP)
+      - "8444:8444"   # Admin API (HTTPS)
+      - "${KONG_HTTP_PORT}:8000"  # Proxy (HTTP)
+      - "${KONG_HTTPS_PORT}:8443"  # Proxy (HTTPS)
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
