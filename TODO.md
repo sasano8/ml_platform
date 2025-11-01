@@ -14,6 +14,8 @@
           * nginx での if は難あり
           * kind: Gateway を使うと両対応できるかもしれない。ingress は HTTPS or GRPCS なのでどうにもならない
           * そんなことより kourier とか使った方がいい
+          * [x] : knative + kourier 仮導入
+          * [x] : knative と kong の疎通確認
     * Windows 環境
         * [x] : SSL 検証の成功
         * [x] : Chrome での http/2 確認

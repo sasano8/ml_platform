@@ -10,25 +10,49 @@ sudo ./tools/download_gomplate.sh $(python3 tools/get_osinfo.py)
 
 ## knative の起動
 
-衝突しないネットワーク範囲を探す
+ボリュームを作成します。
 
 ```
-docker network inspect -f '{{.Name}} {{range .IPAM.Config}}{{.Subnet}} {{end}}' $(docker network ls -q)
+docker volume create platform-k0s
 ```
 
-docker-compose.yml に埋め込む変数を生成します。
+docker ネットワークを作成する。
+これは kubernetes ノード（コンテナ）に固定ip を割り当てるためです（ip が変わるとubernetes ノードは起動しません）。
 
 ```
-python3 tools/conf_generate.py --external_host 172.30.0.2 > .env.json
+--subnet 10.23.0.0/16
+docker network create --driver bridge fixed_compose_network
+read -r SUBNET GATEWAY < <(docker network inspect fixed_compose_network | jq -r '.[0].IPAM.Config[0] | "\(.Subnet) \(.Gateway)"')
+echo $SUBNET $GATEWAY
+docker network rm fixed_compose_network
+
+# subnet, gateway を固定しておかないと compose を実行できない
+docker network create --driver bridge --subnet $SUBNET --gateway $GATEWAY fixed_compose_network
+docker network inspect fixed_compose_network
+```
+
+構成ファイルを生成する。
+
+```
+python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY
+```
+
+構成ファイルで動的に算出する部分を更新します。
+
+```
+python3 tools calculate
 ```
 
 k0s + knative の起動とセットアップを行います。
+初回は時間がかかったりフリーズしたりします。
+
+その場合は Ctrl + C で停止し、再実行してください（何度実行しても同じ結果になるようになっています）。
 
 ```
 make k0s-up
 ```
 
-kservice の疎通確認を行うので以下の応答例を参考に、HTTP ステータス 200 が返り、`Hello Edge!!!` の応答を確認してください。
+以下の応答例を参考に、HTTP ステータス 200 が返り、`Hello Edge!!!` の応答を確認してください。
 
 ```
 * Connected to hello-kservice.default.172-30-0-2.sslip.io (172.30.0.2) port 30080

@@ -2,19 +2,12 @@ volumes:
   platform-k0s:
     name: platform-k0s
 
+
 networks:
   # ip が変わると kubernetes が動かなくなるので 固定ipで管理
   fixed_compose_network:
     name: fixed_compose_network
-    driver: bridge
-    ipam:
-      config:
-        # CIDR の private-range を割り当てる
-        - subnet: {{ (ds "cfg").subnet | quote }}
-          gateway: {{ (ds "cfg").gateway | quote }}
-  # fixed_compose_network:
-  #   external: true
-  #   name: sample_kong_stack_default   # 既存ネットワークを使う場合、既存のネットワーク名を指定
+    external: true
 
 services:
   kube:
@@ -24,14 +17,14 @@ services:
     container_name: kube-master
     hostname: kube-master
     environment:
-      APP_DOMAIN: {{ (ds "cfg").knative_alias | quote }}  # Windows から アクセスできない（デフォルトでローカルホストでしか転送が効かない）
+      APP_DOMAIN: {{ (ds "cfg").merged.kube.knative_alias | quote }}  # Windows から アクセスできない（デフォルトでローカルホストでしか転送が効かない）
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       fixed_compose_network:
-        ipv4_address: {{ (ds "cfg").knative_address | quote }}
+        ipv4_address: {{ (ds "cfg").merged.kube.knative_address | quote }}
         aliases:
-          - {{ (ds "cfg").knative_alias | quote }}
+          - {{ (ds "cfg").merged.kube.knative_alias | quote }}
     privileged: true
     ports:
       - "30080:30080"  # for ingress

@@ -21,7 +21,7 @@ done
 
 # ノードが立ち上がるのを待つ
 echo "[wait] kube node"
-kubectl wait node --all --for=condition=Ready --timeout=60m
+kubectl wait node --all --for=condition=Ready --timeout=180m
 
 # ingress に kourier を指定
 kubectl patch configmap/config-network \
