@@ -7,7 +7,7 @@ set -e
 # certificate-authority-data がかけるのでなにか予期しないことがおきるかも？
 # 初回起動前に存在しないので起動後に実行する
 # KUBECONFIG=/var/lib/k0s/kubelet.conf kubectl config set-cluster default --server=https://127.0.0.1:6443
-APP_DOMAIN=$APP_DOMAIN
+EXTERNAL_DOMAIN=$EXTERNAL_DOMAIN
 
 # シンボリックリンクは動かない
 cd -- "$(dirname -- "$0")" || exit 1
@@ -38,7 +38,7 @@ kubectl patch configmap/config-network \
 kubectl patch configmap/config-domain \
   --namespace knative-serving \
   --type=json \
-  -p='[{"op":"replace","path":"/data","value":{"'$APP_DOMAIN'":""}}]'
+  -p='[{"op":"replace","path":"/data","value":{"'$EXTERNAL_DOMAIN'":""}}]'
 
 
 # ingressPort -> nodePort -> targetPort の設定
@@ -61,35 +61,7 @@ kubectl -n kourier-system describe svc kourier
 kubectl -n kube-system get ds kube-proxy
 kubectl -n knative-serving get cm config-network -o jsonpath='{.data.ingress-class}'; echo
 
-# kubectl -n default logs -l serving.knative.dev/service=hello --tail=50
-# kubectl -n default get pod -l serving.knative.dev/service=hello
-
 echo "[wait] kourier endpoints"
 kubectl get endpoints -n kourier-system
 kubectl wait -n kourier-system --for=jsonpath='{.subsets[0].addresses[0].ip}' endpoints/kourier --timeout=180m
 kubectl get endpoints -n kourier-system
-
-kubectl apply -f ../services/hello-ksvc-http.yml
-kubectl wait --for=condition=Ready kservice/hello-ksvc-http -n default --timeout=180s
-kubectl wait -n default --for=condition=Ready pod -l 'serving.knative.dev/service=hello-ksvc-http' --timeout=180s
-
-NODEIP=localhost
-
-echo "Waiting for route to accept traffic at Host: hello-ksvc-http.default.$APP_DOMAIN http://$NODEIP:30080"
-# f: 4xx/5xx エラーで失敗扱いにする s: 進捗バーなど非表示
-until curl -v -fs -H "Host: hello-ksvc-http.default.$APP_DOMAIN" http://$HOSTNAME:30080; do
-  sleep 5
-done
-
-kubectl apply -f ../services/hello-ksvc-grpc.yml
-
-echo "Waiting for route to accept traffic at Host: hello-ksvc-grpc.default.$APP_DOMAIN http://$NODEIP:30080"
-until grpcurl -v -plaintext -authority "hello-ksvc-grpc.default.$APP_DOMAIN" $NODEIP:30080 list; do
-  sleep 5
-done
-
-kubectl get ksvc
-kubectl get pods
-
-kubectl apply -f ../services/hello-ksvc-httpbin.yml
-kubectl apply -f ../services/hello-ksvc-websocket.yml

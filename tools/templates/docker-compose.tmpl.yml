@@ -16,14 +16,14 @@ services:
     # container_name: kube-master
     hostname: kube-master  # host名が変わるとノードが NotReady となるため固定
     environment:
-      APP_DOMAIN: {{ (ds "cfg").merged.kube.knative_alias | quote }}
+      EXTERNAL_DOMAIN: {{ (ds "cfg").merged.kube.external_domain | quote }}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       fixed_compose_network:
-        ipv4_address: {{ (ds "cfg").merged.kube.knative_address | quote }}
+        ipv4_address: {{ (ds "cfg").merged.kube.internal_ip | quote }}
 #        aliases:
-#          - {{ (ds "cfg").merged.kube.knative_alias | quote }}
+#          - {{ (ds "cfg").merged.kube.external_domain | quote }}
     privileged: true
     ports:
       - "30080:30080"  # for ingress

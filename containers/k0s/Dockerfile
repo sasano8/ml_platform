@@ -12,5 +12,6 @@ RUN mv ./kubectl /usr/local/bin && chmod +x /usr/local/bin/kubectl
 WORKDIR /root
 
 COPY ./setup ./setup
-RUN ./setup/01_kube_setup_kanative.sh
+COPY ./services ./services
+RUN ./setup/01_kube_download.sh
 WORKDIR /

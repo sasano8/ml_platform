@@ -13,7 +13,7 @@ spec:
         - image: ghcr.io/knative/helloworld-go:latest
           env:
             - name: TARGET
-              value: "Edge!!
+              value: "Edge!!"
           startupProbe:
             tcpSocket: { port: 8080 }
             initialDelaySeconds: 1  # 初回待機

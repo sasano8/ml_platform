@@ -90,13 +90,6 @@ def conf_init(
             },
             "kube": {
                 "network": network,
-                # "knative_address": "172.30.0.2",
-                # "subnet": "172.30.0.0/16",
-                # "gateway": "172.30.0.1",
-                # "knative_alias": "172-30-0-2.sslip.io",
-                # "external_host": "172.30.0.2",
-                # "wildcarddomain": "sslip.io",
-                # "external_domain": "172-30-0-2.sslip.io",
             },
             "kong": {},
             "minio": {
@@ -165,11 +158,11 @@ def calculate(data: dict):
     }
     knative_domain = calculate["domains"]["knative"]
     calculate["domains"]["knative_https"] = "*.default." + knative_domain
-    calculate["domains"]["knative_grpcs"] = "*.default.grpcs." + knative_domain
+    # calculate["domains"]["knative_grpcs"] = "*.default.grpcs." + knative_domain
 
     calculate = data["calculate"].setdefault("kube", {})
-    calculate["knative_address"] = fixed_ips[0]
-    calculate["knative_alias"] = knative_domain
+    calculate["internal_ip"] = fixed_ips[0]  # TODO: 現在若い番号を割り当てているが、複数のコンテナを同時立ち上げると先にipが使われてしまうので、後ろから取った方がよい
+    calculate["external_domain"] = knative_domain
 
     data["merged"] = merge(data)
     # print(data["merged"])
