@@ -93,34 +93,3 @@ kubectl get pods
 
 kubectl apply -f ../services/hello-ksvc-httpbin.yml
 kubectl apply -f ../services/hello-ksvc-websocket.yml
-
-# apk add dnsmasq
-# vi /etc/dnsmasq.conf
-
-# # <domain>/<node_ip>
-# address=/.knative.platform.localtest.me/172.23.0.1
-# exec dnsmasq -k
-
-# /etc/resolv.conf # の先頭に以下を書く 127.0.0.1:53 で待ち受けている
-# nameserver 127.0.0.1
-
-
-
-# autoTLS
-
-# k0s kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
-
-# apiVersion: cert-manager.io/v1
-# kind: ClusterIssuer
-# metadata:
-#   name: step-acme
-# spec:
-#   acme:
-#     server: https://step-ca:9000/acme/acme/directory   # ← step-ca の ACME directory
-#     email: you@example.com
-#     privateKeySecretRef:
-#       name: step-acme-account-key
-#     solvers:
-#     - http01:
-#         ingress:
-#           class: kong
