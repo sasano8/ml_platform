@@ -91,6 +91,8 @@ done
 kubectl get ksvc
 kubectl get pods
 
+kubectl apply -f ./hello-ksvc-httpbin.yaml
+kubectl apply -f ./hello-ksvc-websocket.yml
 
 # apk add dnsmasq
 # vi /etc/dnsmasq.conf

@@ -2,29 +2,28 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   namespace: default
-  name: hello-ksvc-grpc
+  name: httpbin-ksvc
 spec:
   template:
     metadata:
       annotations:
-        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/minScale: "0"
     spec:
+      timeoutSeconds: 60                         # 重いエンドポイント用に任意で延長
       containers:
-        - image: moul/grpcbin
+        - image: ghcr.io/mccutchen/go-httpbin:latest
           ports:
-            - name: h2c
-              containerPort: 9000  # knative のデフォルトポート 8080 待ち受けポートが違ければ指定する
+            - containerPort: 8080
           startupProbe:
-            tcpSocket: { port: 9000 }
+            tcpSocket: { port: 8080 }
             initialDelaySeconds: 1  # 初回待機
             periodSeconds: 5     # 確認間隔
             failureThreshold: 3  # 連続失敗数
           readinessProbe:
-            tcpSocket: { port: 9000 }
+            tcpSocket: { port: 8080 }
             periodSeconds: 2
             failureThreshold: 3
           livenessProbe:
-            tcpSocket: { port: 9000 }
+            tcpSocket: { port: 8080 }
             periodSeconds: 10
             failureThreshold: 3
-

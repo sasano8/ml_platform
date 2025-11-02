@@ -1,5 +1,19 @@
 # TODO
 
+## 環境構築
+
+* [x] : kubernetes *+ knative を立てる
+* [x] : kong を立てる
+* [x] : 証明書サービスを立てる
+* [x] : kong で https を有効にする
+  * [x] : 各種プロトコルでの動作確認
+    * [x] : https の疎通
+    * [x] : http の疎通
+    * [x] : grpcs の疎通
+    * [x] : grpc の疎通
+  * [ ] : 問題点の解決（優先度低）
+    * [ ] : http と grpc のリクエストを交互に実行すると `Received HTTP/0.9 when not allowed` となる。おそらく同じ hosts にヒットしているため何かのキャッシュで不具合が生じていると思われる。
+      * [ ] : knative 側で http と grpc のポートを分ける。kong で http と grpc の転送先を分けてみる。
 * [x] : https 化
     * linux 環境
         * [x] : SSL 検証の成功

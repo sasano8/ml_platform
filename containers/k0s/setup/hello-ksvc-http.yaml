@@ -7,10 +7,23 @@ spec:
   template:
     metadata:
       annotations:
-        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/minScale: "0"
     spec:
       containers:
         - image: ghcr.io/knative/helloworld-go:latest
           env:
             - name: TARGET
-              value: "Edge!!"
+              value: "Edge!!
+          startupProbe:
+            tcpSocket: { port: 8080 }
+            initialDelaySeconds: 1  # 初回待機
+            periodSeconds: 5     # 確認間隔
+            failureThreshold: 3  # 連続失敗数
+          readinessProbe:
+            tcpSocket: { port: 8080 }
+            periodSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket: { port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 3

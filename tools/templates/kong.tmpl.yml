@@ -98,12 +98,6 @@ services:
   #         - <<: *large_file
 
   - name: k8s-ingress-https
-    host: kube-master
-    port: 30080
-    # protocol: https
-    protocol: http
-    tls_verify: null
-
     routes:
       - name: route-k8s-https
         protocols: [ "https", "http" ]
@@ -112,19 +106,24 @@ services:
         preserve_host: true
         strip_path: false
 
-  - name: k8s-ingress-grpcs
     host: kube-master
     port: 30080
-    protocol: grpcs
+    protocol: http  # 上流はTLSにしない
     tls_verify: null
 
+  - name: k8s-ingress-grpcs
     routes:
       - name: route-k8s-grpcs
         protocols: [ "grpcs", "grpc" ]
         hosts:
-          - {{ (ds "cfg").merged.kong.domains.knative_grpcs | quote }}
+          - {{ (ds "cfg").merged.kong.domains.knative_https | quote }}
         preserve_host: true
         strip_path: false
         headers:
           content-type:
-            - ~*^application/grpc
+            - ~*^application/grpc  # content-type で http と区別 
+
+    host: kube-master
+    port: 30080
+    protocol: grpc  # 上流はTLSにしない
+    tls_verify: null
