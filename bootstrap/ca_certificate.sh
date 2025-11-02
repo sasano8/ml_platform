@@ -2,19 +2,22 @@
 
 set -e
 
-docker compose up -d step-ca
+docker compose up -d stepca
 
 sleep 5
 
-docker compose exec step-ca step ca certificate \
-  "platform.localtest.me" /home/step/certs/wild.platform.localtest.me.crt /home/step/certs/wild.platform.localtest.me.key \
+# ca-url http://stepca.172-31-97-7.sslip.io:9000
+
+docker compose exec stepca step ca certificate \
+  "172-31-97-7.sslip.io" /home/step/certs/wild.platform.localtest.me.crt /home/step/certs/wild.platform.localtest.me.key \
   --provisioner admin@example.com \
-  --http-listen http://localhost:9000 \
+  --http-listen http://stepca.172-31-97-7.sslip.io:9000 \
   --root /home/step/certs/root_ca.crt \
-  --san "platform.localtest.me" \
-  --san "*.platform.localtest.me" \
-  --san "*.default.apps.platform.localtest.me" \
-  --san "*.default.knative.platform.localtest.me" \
+  --san "172-31-97-7.sslip.io" \
+  --san "stepca.172-31-97-7.sslip.io" \
+  --san "*.knative.172-31-97-7.sslip.io" \
+  --san "*.default.knative.172-31-97-7.sslip.io" \
+  --san "*.default.grpcs.knative.172-31-97-7.sslip.io" \
   --provisioner-password-file /home/step/secrets/password
 
 
@@ -22,4 +25,4 @@ docker compose exec step-ca step ca certificate \
 # 連鎖順は重要
 # wild.platform.localtest.me.crt（サーバー証明書リーフ）-> intermediate_ca.crt（中間CA）の順で連結。
 # クライアントは、leaf → intermediate → root の連鎖を検証する（rootはクライアントに導入済みの前提）
-docker compose exec step-ca sh -c "cat /home/step/certs/wild.platform.localtest.me.crt /home/step/certs/intermediate_ca.crt > /home/step/certs/fullchain.wild.platform.localtest.me.crt"
+docker compose exec stepca sh -c "cat /home/step/certs/wild.platform.localtest.me.crt /home/step/certs/intermediate_ca.crt > /home/step/certs/fullchain.wild.platform.localtest.me.crt"

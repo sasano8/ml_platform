@@ -44,7 +44,7 @@ docker network inspect fixed_compose_network
 構成ファイルを生成する。
 
 ```
-python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY  --external_base_domain $EXTERNAL_BASE_DOMAIN
+python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY  --external_base_domain $EXTERNAL_BASE_DOMAIN --uid $(id -u) --gid $(id -g)
 ```
 
 ## knative の起動
@@ -130,7 +130,7 @@ explorer.exe "$(wslpath -w "$PWD/volumes/step/certs")"
 ブラウザから以下のURLから hello が返ることを確認します。
 
 ```
-https://hello-knative.default.knative.platform.localtest.me
+https://hello-ksvc-http.default.knative.172-31-97-7.sslip.io/
 ```
 
 
