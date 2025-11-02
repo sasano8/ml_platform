@@ -38,7 +38,7 @@ services:
       - platform-k0s:/var/lib/k0s
       - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
       # - /var/log/pods
-      - ./configs/kube:/mnt/kube
+      # - ./configs/kube:/mnt/kube
       - ./volumes/step/certs:/certs:ro
 
   kong:
