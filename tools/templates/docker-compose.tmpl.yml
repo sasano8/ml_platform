@@ -11,11 +11,10 @@ networks:
 
 services:
   kube:
-    # image: docker.io/k0sproject/k0s:v1.32.8-k0s.0
     build:
       context: ./containers/k0s
     # container_name: kube-master
-    # hostname: kube-master
+    hostname: kube-master  # host名が変わるとノードが NotReady となるため固定
     environment:
       APP_DOMAIN: {{ (ds "cfg").merged.kube.knative_alias | quote }}
     extra_hosts:
@@ -73,3 +72,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  stepca:
+    image: smallstep/step-ca:latest
+    user: "{{ (ds "cfg").merged.os.uid }}:{{ (ds "cfg").merged.os.gid }}"
+    environment:
+      DOCKER_STEPCA_INIT: 0
+    volumes:
+      - ./volumes/step:/home/step
+    ports:
+      - "9000:9000"
+    # expose:
+    #   - "9000"

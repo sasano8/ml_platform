@@ -1,6 +1,6 @@
 import os, sys
 import json
-
+from typing import Union
 
 def open_file(path: str = "-", mode="r"):
     if path == "-":
@@ -26,6 +26,8 @@ def create_parser():
     s.add_argument("--subnet", required=True)
     s.add_argument("--gateway", required=True)
     s.add_argument("--external_base_domain", required=True)
+    # s.add_argument("--uid", default=None)
+    # s.add_argument("--gid", default=None)
     s.add_argument(
         "--output", nargs="?", default=".env.json", help="target directory (default: .)"
     )
@@ -44,7 +46,7 @@ def create_parser():
     return p
 
 
-def main(argv: list[str] | None = None):
+def main(argv: Union[list[str],  None] = None):
     parser = create_parser()
     args = parser.parse_args(argv)
 
@@ -66,16 +68,25 @@ def conf_init(
     subnet: str,
     gateway: str,
     external_base_domain: str,
+    *,
     output: str,
+    uid: str = None,
+    gid: str = None,
 ):
+    uid = uid if uid else os.getuid()
+    gid = gid if gid else os.getuid()
     config = {
         "def": {
+            "os": {
+                "uid": str(uid),
+                "gid": str(gid),
+            },
             "network": {
                 "name": network,
                 "driver": driver,
                 "subnet": subnet,
                 "gateway": gateway,
-                "external_base_domain": external_base_domain,
+                "external_base_domain": external_base_domain
             },
             "kube": {
                 "network": network,
@@ -149,16 +160,19 @@ def calculate(data: dict):
     calculate = data["calculate"].setdefault("kong", {})
     external_base_domain = data["merged"]["network"]["external_base_domain"]
     calculate["domains"] = {
-        "knative_https": "*.default." + external_base_domain,
-        "knative_grpcs": "*.default.grpcs." + external_base_domain,
+        "knative": "knative." + external_base_domain,
+        "stepca": "stepca." + external_base_domain
     }
+    knative_domain = calculate["domains"]["knative"]
+    calculate["domains"]["knative_https"] = "*.default." + knative_domain
+    calculate["domains"]["knative_grpcs"] = "*.default.grpcs." + knative_domain
 
     calculate = data["calculate"].setdefault("kube", {})
     calculate["knative_address"] = fixed_ips[0]
-    calculate["knative_alias"] = external_base_domain
+    calculate["knative_alias"] = knative_domain
 
     data["merged"] = merge(data)
-    print(data["merged"])
+    # print(data["merged"])
 
     return data
 

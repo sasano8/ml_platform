@@ -36,17 +36,19 @@ services:
 
   # step-ca は content-length を返さない
   # kong は HTTP/1.1 の場合、それを transfer-encoding: chunked とみなす
-  # - name: ca-api
-  #   host: ca.platform.localtest.me
-  #   protocol: https
-  #   tls_verify: false
-  #   routes:
-  #     - name: ca-route
-  #       protocols: [ "https"]
-  #       hosts: [ "ca.platform.localtest.me" ]
-  #       preserve_host: true
-  #       strip_path: false
-  #       https_redirect_status_code: 308
+  - name: ca-api
+    host: stepca
+    # protocol: https
+    protocol: http
+    tls_verify: null
+    routes:
+      - name: ca-route
+        protocols: [ "https", "http"]
+        # hosts: [ "ca.platform.localtest.me" ]
+        hosts: [ {{ (ds "cfg").merged.kong.domains.stepca | quote }} ]
+        preserve_host: true
+        strip_path: false
+        https_redirect_status_code: 308
 
   # - name: auth-api
   #   host: pocket-id
@@ -95,39 +97,8 @@ services:
   #             max_age: 3600
   #         - <<: *large_file
 
-  # - name: k8s-ingress-https
-  #   host: kube
-  #   port: 30443
-  #   protocol: https
-  #   tls_verify: null
-
-  #   routes:
-  #     - name: route-k8s-https
-  #       protocols: [ "https", "grpc" ]
-  #       hosts:
-  #         - {{ (ds "cfg").merged.kong.domains.knative_https | quote }}
-  #       preserve_host: true
-  #       strip_path: false
-
-  # - name: k8s-ingress-grpcs
-  #   host: kube
-  #   port: 30443
-  #   protocol: grpcs
-  #   tls_verify: null
-
-  #   routes:
-  #     - name: route-k8s-grpcs
-  #       protocols: [ "grpcs", "grpc" ]
-  #       hosts:
-  #         - {{ (ds "cfg").merged.kong.domains.knative_grpcs | quote }}
-  #       preserve_host: true
-  #       strip_path: false
-  #       headers:
-  #         content-type:
-  #           - ~*^application/grpc
-
   - name: k8s-ingress-https
-    host: kube
+    host: kube-master
     port: 30080
     # protocol: https
     protocol: http
@@ -142,7 +113,7 @@ services:
         strip_path: false
 
   - name: k8s-ingress-grpcs
-    host: kube
+    host: kube-master
     port: 30080
     protocol: grpcs
     tls_verify: null
@@ -157,17 +128,3 @@ services:
         headers:
           content-type:
             - ~*^application/grpc
-
-  # - name: knative-ingress
-  #   host: kube
-  #   port: 30080
-  #   protocol: http
-  #   # tls_verify: null
-
-  #   routes:
-  #     - name: route-k8s-knative
-  #       protocols: [ "http" ]
-  #       hosts:
-  #         - "*.knative.platform.localtest.me"
-  #       preserve_host: true
-  #       strip_path: false

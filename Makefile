@@ -1,13 +1,19 @@
-k0s-up:
+config-update:
+	@python3 tools calculate 
 	@gomplate -d cfg=.env.json -f tools/templates/docker-compose.tmpl.yml -o docker-compose.yml
+	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
+
+k0s-restart: config-update
+	@docker compose down kube
 	@docker compose up -d kube
+
+k0s-wait:
 	@docker compose exec -it kube /root/setup/02_kube_setup_kanative.sh
 
-kong-restart:
-	@docker compose down kong
-	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
-	@docker compose up -d kong
-	@curl -v -fs -H "Host: hello-ksvc-http.default.172-31-97-7.sslip.io" http://localhost
+kong-restart: config-update
+	@docker compose down kong kube stepca
+	@docker compose up -d kong kube stepca
+# 	@curl -v -fs -H "Host: hello-ksvc-http.default.172-31-97-7.sslip.io" http://localhost
 
 platform-configurate:
 	@[ -f ".env" ] || ./bootstrap/env_init.sh > .env

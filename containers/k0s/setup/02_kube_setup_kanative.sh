@@ -20,10 +20,13 @@ until kubectl get --raw='/readyz' >/dev/null 2>&1; do
 done
 
 # ノードが立ち上がるのを待つ
-echo "[wait] kube node"
-
 # 初期化時に error: no matching resources found が出る
+echo "[wait] kube node"
 kubectl wait node --all --for=condition=Ready --timeout=180m
+
+# knative が有効になるまで待機
+echo "[wait] knative"
+kubectl wait -n knative-serving deploy/webhook --for=condition=Available --timeout=60m
 
 # ingress に kourier を指定
 kubectl patch configmap/config-network \
@@ -60,9 +63,6 @@ kubectl -n knative-serving get cm config-network -o jsonpath='{.data.ingress-cla
 
 # kubectl -n default logs -l serving.knative.dev/service=hello --tail=50
 # kubectl -n default get pod -l serving.knative.dev/service=hello
-
-# knative が有効になるまで待機
-kubectl wait -n knative-serving deploy/webhook --for=condition=Available --timeout=60m
 
 echo "[wait] kourier endpoints"
 kubectl get endpoints -n kourier-system
