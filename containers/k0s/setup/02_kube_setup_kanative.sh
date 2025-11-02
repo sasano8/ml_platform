@@ -69,7 +69,7 @@ kubectl get endpoints -n kourier-system
 kubectl wait -n kourier-system --for=jsonpath='{.subsets[0].addresses[0].ip}' endpoints/kourier --timeout=180m
 kubectl get endpoints -n kourier-system
 
-kubectl apply -f ./hello-ksvc-http.yaml
+kubectl apply -f ../services/hello-ksvc-http.yml
 kubectl wait --for=condition=Ready kservice/hello-ksvc-http -n default --timeout=180s
 kubectl wait -n default --for=condition=Ready pod -l 'serving.knative.dev/service=hello-ksvc-http' --timeout=180s
 
@@ -81,7 +81,7 @@ until curl -v -fs -H "Host: hello-ksvc-http.default.$APP_DOMAIN" http://$HOSTNAM
   sleep 5
 done
 
-kubectl apply -f ./hello-ksvc-grpc.yml
+kubectl apply -f ../services/hello-ksvc-grpc.yml
 
 echo "Waiting for route to accept traffic at Host: hello-ksvc-grpc.default.$APP_DOMAIN http://$NODEIP:30080"
 until grpcurl -v -plaintext -authority "hello-ksvc-grpc.default.$APP_DOMAIN" $NODEIP:30080 list; do
@@ -91,8 +91,8 @@ done
 kubectl get ksvc
 kubectl get pods
 
-kubectl apply -f ./hello-ksvc-httpbin.yaml
-kubectl apply -f ./hello-ksvc-websocket.yml
+kubectl apply -f ../services/hello-ksvc-httpbin.yml
+kubectl apply -f ../services/hello-ksvc-websocket.yml
 
 # apk add dnsmasq
 # vi /etc/dnsmasq.conf
