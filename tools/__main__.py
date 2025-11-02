@@ -25,6 +25,7 @@ def create_parser():
     s.add_argument("--driver", required=True)
     s.add_argument("--subnet", required=True)
     s.add_argument("--gateway", required=True)
+    s.add_argument("--external_base_domain", required=True)
     s.add_argument(
         "--output", nargs="?", default=".env.json", help="target directory (default: .)"
     )
@@ -59,7 +60,14 @@ def main(argv: list[str] | None = None):
     return int(bool(func(**kwargs)))
 
 
-def conf_init(network: str, driver: str, subnet: str, gateway: str, output: str):
+def conf_init(
+    network: str,
+    driver: str,
+    subnet: str,
+    gateway: str,
+    external_base_domain: str,
+    output: str,
+):
     config = {
         "def": {
             "network": {
@@ -67,6 +75,7 @@ def conf_init(network: str, driver: str, subnet: str, gateway: str, output: str)
                 "driver": driver,
                 "subnet": subnet,
                 "gateway": gateway,
+                "external_base_domain": external_base_domain,
             },
             "kube": {
                 "network": network,
@@ -78,8 +87,7 @@ def conf_init(network: str, driver: str, subnet: str, gateway: str, output: str)
                 # "wildcarddomain": "sslip.io",
                 # "external_domain": "172-30-0-2.sslip.io",
             },
-            "kong": {
-            },
+            "kong": {},
             "minio": {
                 "minio_root_user": "minioadmin",
                 "minio_root_password": "minioadmin123",
@@ -136,18 +144,28 @@ def calculate(data: dict):
     fixed_ips = next_host_after_gateway(network["subnet"], network["gateway"])
     calculate["fixed_ips"] = fixed_ips
 
-    calculate = {}
-    calculate_root["kube"] = calculate
+    data["merged"] = merge(data, exclude=[])
+
+    calculate = data["calculate"].setdefault("kong", {})
+    external_base_domain = data["merged"]["network"]["external_base_domain"]
+    calculate["domains"] = {
+        "knative_https": "*.default." + external_base_domain,
+        "knative_grpcs": "*.default.grpcs." + external_base_domain,
+    }
+
+    calculate = data["calculate"].setdefault("kube", {})
     calculate["knative_address"] = fixed_ips[0]
-    calculate["knative_alias"] = fixed_ips[0].replace(".", "-") + ".sslip.io"
+    calculate["knative_alias"] = external_base_domain
 
     data["merged"] = merge(data)
+    print(data["merged"])
 
     return data
 
 
 def merge(data: dict, exclude=["network"]):
     import copy
+
     _exclude = set(exclude)
     merged = {}
     for k, v in data["def"].items():

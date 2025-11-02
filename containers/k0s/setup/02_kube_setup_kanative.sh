@@ -21,6 +21,8 @@ done
 
 # ノードが立ち上がるのを待つ
 echo "[wait] kube node"
+
+# 初期化時に error: no matching resources found が出る
 kubectl wait node --all --for=condition=Ready --timeout=180m
 
 # ingress に kourier を指定

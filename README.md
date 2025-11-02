@@ -8,12 +8,22 @@ gomplate をインストールする。
 sudo ./tools/download_gomplate.sh $(python3 tools/get_osinfo.py)
 ```
 
-## knative の起動
-
-ボリュームを作成します。
+## ネットワークの構築
 
 ```
-docker volume create platform-k0s
+WSL_IP=$(ip -4 addr show eth0 | awk '/inet /{print $2}' | cut -d/ -f1)
+EXTERNAL_BASE_DOMAIN=$WSL_IP.sslip.io
+
+WSL_NETWORK=$(ip -4 addr show eth0 | awk '/inet /{print $2}')
+echo "command = ip link add br01 type bridge & ip addr add $WSL_NETWORK dev br01 & ip link set br01 up"
+```
+
+`/etc/wsl.conf` でWSL に固定IP を振ります。
+`wsl.conf` は各ディストリビューション（コンテナ）毎に適用されます。
+
+```
+[boot]
+command = ip link add br01 type bridge & ip addr add 10.2.0.3/16 dev br01 & ip link set br01 up
 ```
 
 docker ネットワークを作成する。
@@ -34,7 +44,15 @@ docker network inspect fixed_compose_network
 構成ファイルを生成する。
 
 ```
-python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY
+python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY  --external_base_domain $EXTERNAL_BASE_DOMAIN
+```
+
+## knative の起動
+
+ボリュームを作成します。
+
+```
+docker volume create platform-k0s
 ```
 
 構成ファイルで動的に算出する部分を更新します。
@@ -52,16 +70,17 @@ k0s + knative の起動とセットアップを行います。
 make k0s-up
 ```
 
-以下の応答例を参考に、HTTP ステータス 200 が返り、`Hello Edge!!!` の応答を確認してください。
+以下の応答例を参考に、疎通結果を確認してください。
 
 ```
-* Connected to hello-kservice.default.172-30-0-2.sslip.io (172.30.0.2) port 30080
-* using HTTP/1.x
-> GET / HTTP/1.1
-HTTP/1.1 200 OK
+Waiting for route to accept traffic at Host: hello-ksvc-http.default.172-31-97-7.sslip.io http://localhost:30080
 Hello Edge!!!
 ```
 
+```
+Waiting for route to accept traffic at Host: hello-ksvc-grpc.default.172-31-97-7.sslip.io http://localhost:30080
+hello.HelloService
+```
 
 ## kong の起動
 
