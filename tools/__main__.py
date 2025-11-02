@@ -20,6 +20,10 @@ def create_parser():
     # p.add_argument("-v", "--verbose", action="count", default=0, help="increase verbosity")
 
     sub = p.add_subparsers(dest="command")
+
+    ##########################
+    ### init
+    ##########################
     s = sub.add_parser("init", help="initialize a repository")
     s.add_argument("--network", required=True)
     s.add_argument("--driver", required=True)
@@ -33,6 +37,9 @@ def create_parser():
     )
     s.set_defaults(func=conf_init)
 
+    ##########################
+    ### calculate
+    ##########################
     s = sub.add_parser("calculate", help="add file(s) to index")
     s.add_argument(
         "--input", nargs="?", default=".env.json", help="target directory (default: .)"
