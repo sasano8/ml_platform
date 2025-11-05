@@ -6,20 +6,8 @@ docker compose up -d stepca
 
 sleep 5
 
-# ca-url http://stepca.172-31-97-7.sslip.io:9000
-
-docker compose exec stepca step ca certificate \
-  "172-31-97-7.sslip.io" /home/step/certs/wild.platform.localtest.me.crt /home/step/certs/wild.platform.localtest.me.key \
-  --provisioner admin@example.com \
-  --http-listen http://stepca.172-31-97-7.sslip.io:9000 \
-  --root /home/step/certs/root_ca.crt \
-  --san "172-31-97-7.sslip.io" \
-  --san "stepca.172-31-97-7.sslip.io" \
-  --san "*.knative.172-31-97-7.sslip.io" \
-  --san "*.default.knative.172-31-97-7.sslip.io" \
-  --san "*.default.grpcs.knative.172-31-97-7.sslip.io" \
-  --provisioner-password-file /home/step/secrets/password
-
+# sans を含めた証明書を発行する
+python3 -m tools ca_certificate
 
 
 # 連鎖順は重要

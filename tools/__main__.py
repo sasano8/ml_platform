@@ -1,16 +1,8 @@
 import os, sys
 import json
 from typing import Union
-
-def open_file(path: str = "-", mode="r"):
-    if path == "-":
-        fd = os.dup(sys.stdout.fileno())
-        f = os.fdopen(
-            fd, "w", buffering=1, encoding=sys.stdout.encoding, errors="replace"
-        )
-        return f
-    else:
-        return open(path, mode)
+from ._io import open_file
+from . import ca
 
 
 def create_parser():
@@ -24,36 +16,47 @@ def create_parser():
     ##########################
     ### init
     ##########################
-    s = sub.add_parser("init", help="initialize a repository")
+    s = sub.add_parser("conf_init", help="initialize a repository")
+    s.set_defaults(func=conf_init)
     s.add_argument("--network", required=True)
     s.add_argument("--driver", required=True)
     s.add_argument("--subnet", required=True)
     s.add_argument("--gateway", required=True)
     s.add_argument("--external_base_domain", required=True)
-    # s.add_argument("--uid", default=None)
-    # s.add_argument("--gid", default=None)
+    s.add_argument("--uid", default=None)
+    s.add_argument("--gid", default=None)
     s.add_argument(
         "--output", nargs="?", default=".env.json", help="target directory (default: .)"
     )
-    s.set_defaults(func=conf_init)
 
     ##########################
     ### calculate
     ##########################
-    s = sub.add_parser("calculate", help="add file(s) to index")
+    s = sub.add_parser("conf_calculate", help="")
+    s.set_defaults(func=conf_calculate)
     s.add_argument(
         "--input", nargs="?", default=".env.json", help="target directory (default: .)"
     )
     s.add_argument(
         "--output", nargs="?", default=".env.json", help="target directory (default: .)"
     )
-    # s.add_argument("files", nargs="+", help="files to add")
-    # s.add_argument("-f", "--force", action="store_true", help="allow adding otherwise ignored files")
-    s.set_defaults(func=conf_calculate)
+
+    s = sub.add_parser("ca_init", help="")
+    s.set_defaults(func=ca.init_ca)
+    s.add_argument(
+        "--input", nargs="?", default=".env.json", help="target directory (default: .)"
+    )
+
+    s = sub.add_parser("ca_certificate", help="")
+    s.set_defaults(func=ca.certificate_ca)
+    s.add_argument(
+        "--input", nargs="?", default=".env.json", help="target directory (default: .)"
+    )
+
     return p
 
 
-def main(argv: Union[list[str],  None] = None):
+def main(argv: Union[list[str], None] = None):
     parser = create_parser()
     args = parser.parse_args(argv)
 
@@ -83,7 +86,7 @@ def conf_init(
     uid = uid if uid else os.getuid()
     gid = gid if gid else os.getuid()
     config = {
-        "def": {
+        "init": {
             "os": {
                 "uid": str(uid),
                 "gid": str(gid),
@@ -93,7 +96,13 @@ def conf_init(
                 "driver": driver,
                 "subnet": subnet,
                 "gateway": gateway,
-                "external_base_domain": external_base_domain
+                "external_base_domain": external_base_domain,
+            },
+            "stepca": {
+                "server_address": ":9000",
+                "ca_name": "Localhost",
+                "out_crt": "/home/step/certs/wild.platform.localtest.me.crt",
+                "out_key": "/home/step/certs/wild.platform.localtest.me.key",
             },
             "kube": {
                 "network": network,
@@ -114,7 +123,7 @@ def conf_init(
 
 
 def conf_calculate(input: str, output: str):
-    with open(input, "r") as f:
+    with open_file(input, "r") as f:
         config = json.load(f)
 
     config = calculate(config)
@@ -149,27 +158,34 @@ def calculate(data: dict):
     calculate_root = {}
     data["calculate"] = calculate_root
     data.setdefault("override", {})
-    network: dict = data["def"]["network"]
+    network: dict = data["init"]["network"]
     calculate = {}
     calculate_root["network"] = calculate
     fixed_ips = next_host_after_gateway(network["subnet"], network["gateway"])
     calculate["fixed_ips"] = fixed_ips
 
     data["merged"] = merge(data, exclude=[])
+    external_base_domain = data["merged"]["network"]["external_base_domain"]
+
+    calculate = data["calculate"].setdefault("stepca", {})
+    calculate["primary_ca_host"] = "stepca." + external_base_domain
+    calculate["common_name"] = external_base_domain
+
+    sans: dict = calculate.setdefault("sans", {})
+    sans["base_domain"] = external_base_domain
+    sans["stepca"] = "stepca." + external_base_domain
+    sans["knative"] = "knative." + external_base_domain
+    sans["knative_https"] = "*.default." + "knative." + external_base_domain
+    # sans["knative_grpcs"] = "*.default.grpcs." + "knative." + external_base_domain
 
     calculate = data["calculate"].setdefault("kong", {})
-    external_base_domain = data["merged"]["network"]["external_base_domain"]
-    calculate["domains"] = {
-        "knative": "knative." + external_base_domain,
-        "stepca": "stepca." + external_base_domain
-    }
-    knative_domain = calculate["domains"]["knative"]
-    calculate["domains"]["knative_https"] = "*.default." + knative_domain
-    # calculate["domains"]["knative_grpcs"] = "*.default.grpcs." + knative_domain
+    calculate["domains"] = {**data["calculate"]["stepca"]["sans"]}
 
     calculate = data["calculate"].setdefault("kube", {})
-    calculate["internal_ip"] = fixed_ips[0]  # TODO: 現在若い番号を割り当てているが、複数のコンテナを同時立ち上げると先にipが使われてしまうので、後ろから取った方がよい
-    calculate["external_domain"] = knative_domain
+    calculate["internal_ip"] = fixed_ips[
+        0
+    ]  # TODO: 現在若い番号を割り当てているが、複数のコンテナを同時立ち上げると先にipが使われてしまうので、後ろから取った方がよい
+    calculate["external_domain"] = data["calculate"]["stepca"]["sans"]["knative"]
 
     data["merged"] = merge(data)
     # print(data["merged"])
@@ -182,7 +198,7 @@ def merge(data: dict, exclude=["network"]):
 
     _exclude = set(exclude)
     merged = {}
-    for k, v in data["def"].items():
+    for k, v in data["init"].items():
         if k in _exclude:
             continue
 

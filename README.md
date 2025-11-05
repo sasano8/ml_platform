@@ -41,33 +41,69 @@ docker network create --driver bridge --subnet $SUBNET --gateway $GATEWAY fixed_
 docker network inspect fixed_compose_network
 ```
 
-構成ファイルを生成する。
+## 構成ファイル(.env.json)の準備
+
+構成ファイルを生成します。
 
 ```
-python3 tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY  --external_base_domain $EXTERNAL_BASE_DOMAIN --uid $(id -u) --gid $(id -g)
+# make config-init
+python3 -m tools init --network fixed_compose_network --driver bridge --subnet $SUBNET --gateway $GATEWAY  --external_base_domain $EXTERNAL_BASE_DOMAIN --uid $(id -u) --gid $(id -g)
 ```
+
+構成ファイルの初期値を必要に応じて変更し、動的に算出する値を更新します。
+
+```
+make config-update
+```
+
+
+## 認証局と証明書の準備
+
+認証局を初期化します。
+初期化すると、ルート証明書の出力先パスが出力されます。
+ルート証明書は、linux 環境上には登録されていますが、Windows 上には別途ルート証明書を登録してください。
+
+```
+make ca-init
+```
+
+サーバー証明書を生成する。
+
+```
+make ca-certificate
+```
+
 
 ## knative の起動
 
-ボリュームを作成します。
+### ボリュームの作成
 
 ```
 docker volume create platform-k0s
 ```
 
-構成ファイルで動的に算出する部分を更新します。
+
+### k0s 環境の構築
 
 ```
-python3 tools calculate
+k0s-init
 ```
 
-k0s + knative の起動とセットアップを行います。
+### knative のセットアップ
+
+```
+make k0s-setup
+```
+
+knative の起動とセットアップを行います。
 初回は時間がかかったりフリーズしたりします。
 
 その場合は Ctrl + C で停止し、再実行してください（何度実行しても同じ結果になるようになっています）。
 
+### knative のテスト
+
 ```
-make k0s-up
+k0s-test
 ```
 
 以下の応答例を参考に、疎通結果を確認してください。
