@@ -56,6 +56,23 @@ python3 -m tools init --network fixed_compose_network --driver bridge --subnet $
 make config-update
 ```
 
+## 環境の初期化
+
+```
+make env-init
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 認証局と証明書の準備
 

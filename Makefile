@@ -1,8 +1,8 @@
 config-init:
-	@python3 -m tools init
+	@python3 -m tools conf_init
 
 config-update:
-	@python3 -m tools calculate
+	@python3 -m tools conf_calculate
 	@gomplate -d cfg=.env.json -f tools/templates/docker-compose.tmpl.yml -o docker-compose.yml
 	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
 
@@ -10,6 +10,7 @@ ca-init:
 	@docker compose down stepca
 	@rm -rf volumes/step
 	@./bootstrap/ca_init.sh
+	@./bootstrap/ca_show_certpath.sh
 
 ca-certificate:
 	@./bootstrap/ca_certificate.sh
@@ -18,7 +19,6 @@ k0s-init:
 	@docker compose down kube
 	@docker volume rm platform-k0s || true
 	@docker volume create platform-k0s
-	@docker compose up -d kube
 
 k0s-setup:
 	@docker compose up -d kube
@@ -28,18 +28,26 @@ k0s-setup:
 k0s-test:
 	@docker compose exec -it kube /root/setup/04_kube_test.sh
 
+containers-up:
+	@docker compose up -d stepca kube kong
 
+env-init:
+	@docker compose down
+	@make config-update
+	@make ca-init
+	@make ca-certificate
+	@make k0s-init
+	@make k0s-setup
+	@make k0s-test
+	@make containers-up
+	@./bootstrap/ca_show_certpath.sh
 
-
-
-
-
-
-
-
-
-
-
+env-update:
+	@docker compose down
+	@make config-update
+	@make ca-certificate
+	@make k0s-setup
+	@make containers-up
 
 
 kong-restart: config-update

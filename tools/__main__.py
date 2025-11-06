@@ -107,7 +107,10 @@ def conf_init(
             "kube": {
                 "network": network,
             },
-            "kong": {},
+            "kong": {
+                "KONG_SSL_CERT": "/certs/fullchain.wild.platform.localtest.me.crt",
+                "KONG_SSL_CERT_KEY": "/certs/wild.platform.localtest.me.key",
+            },
             "minio": {
                 "minio_root_user": "minioadmin",
                 "minio_root_password": "minioadmin123",

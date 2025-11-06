@@ -5,6 +5,7 @@ set -e
 docker compose up -d stepca
 
 sleep 5
+docker compose logs stepca
 
 # sans を含めた証明書を発行する
 python3 -m tools ca_certificate

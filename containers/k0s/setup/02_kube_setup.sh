@@ -15,18 +15,41 @@ cd -- "$(dirname -- "$0")" || exit 1
 # apiserverが立ち上がるのを待つ
 echo "[wait] apiserver"
 until kubectl get --raw='/readyz' >/dev/null 2>&1; do
-  sleep 1
+  sleep 5
   echo "[wait] apiserver"
 done
 
 # ノードが立ち上がるのを待つ
 # 初期化時に error: no matching resources found が出る
 echo "[wait] kube node"
+
+# １つのノードも存在していないときは wait が no matching resources found となるので、１つノードが立ち上がるまで待つ
+until kubectl get nodes --no-headers 2>/dev/null | grep -q .; do
+  sleep 5
+  echo "[wait] kube node"
+done
+
 kubectl wait node --all --for=condition=Ready --timeout=180m
 
 # knative が有効になるまで待機
 echo "[wait] knative"
 kubectl wait -n knative-serving deploy/webhook --for=condition=Available --timeout=60m
+
+until kubectl get pods -n knative-serving --no-headers 2>/dev/null | grep -q .; do
+  sleep 5
+  echo "[wait] knative"
+done
+
+kubectl wait pod --all -n knative-serving --for=condition=Ready --timeout=180m
+
+echo "[enabled]service: knative"
+
+echo "[wait] knative webhook endpoints"
+# エンドポイントがつかないと後続で失敗する
+until [ "$(kubectl -n knative-serving get endpoints webhook -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)" -ge 1 ]; do
+  echo "[wait] knative webhook endpoints"
+  sleep 5
+done
 
 # ingress に kourier を指定
 kubectl patch configmap/config-network \

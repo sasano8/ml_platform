@@ -125,6 +125,18 @@ class Command:
     @property
     def display_cmd(self):
         return self._kwargs["display_cmd"]
+    
+    def get_shell_cmd(self):
+        if isinstance(self._kwargs["display_cmd"], str):
+            return self._kwargs["display_cmd"]
+        elif isinstance(self._kwargs["display_cmd"], list):
+            ...
+        else:
+            raise RuntimeError()
+        
+        import shlex
+        multi_line = " \\\n".join(shlex.quote(line) for line in self._kwargs["display_cmd"])
+        return multi_line
 
     @staticmethod
     def build_cmd(cmd, shell, use_stdbuf):

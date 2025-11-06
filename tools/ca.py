@@ -1,5 +1,5 @@
 import os
-from .command import Command, CmdResult
+from .command import Command
 from . import _io
 
 
@@ -31,7 +31,7 @@ def init_ca(input):
         "primary_ca_host": stepca["primary_ca_host"],
     }
     cmd = _init_ca(**kwargs)
-    print(cmd.display_cmd)
+    print(cmd.get_shell_cmd())
     result = cmd.run()
     return result.rc
 
@@ -48,7 +48,7 @@ def certificate_ca(input):
         "sans": stepca["sans"],
     }
     cmd = _certificate_ca(**kwargs)
-    print(cmd.display_cmd)
+    print(cmd.get_shell_cmd())
     result = cmd.run()
     return result.rc
 
@@ -139,6 +139,7 @@ def _certificate_ca(
         common_name,
         out_crt,
         out_key,
+        "--force",  # 常に上書き
         "--provisioner",
         provisioner,
         "--http-listen",
