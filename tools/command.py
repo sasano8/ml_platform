@@ -125,7 +125,7 @@ class Command:
     @property
     def display_cmd(self):
         return self._kwargs["display_cmd"]
-    
+
     def get_shell_cmd(self):
         if isinstance(self._kwargs["display_cmd"], str):
             return self._kwargs["display_cmd"]
@@ -133,9 +133,12 @@ class Command:
             ...
         else:
             raise RuntimeError()
-        
+
         import shlex
-        multi_line = " \\\n".join(shlex.quote(line) for line in self._kwargs["display_cmd"])
+
+        multi_line = " \\\n".join(
+            shlex.quote(line) for line in self._kwargs["display_cmd"]
+        )
         return multi_line
 
     @staticmethod

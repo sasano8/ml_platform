@@ -1,3 +1,5 @@
+{{- $cfg := ds "cfg" -}}  # $cfg でアクセスできるようにしておく。いちいち、(ds "cfg")しなくとも、$cfg でアクセス可能。
+
 volumes:
   platform-k0s:
     name: platform-k0s
@@ -75,7 +77,7 @@ services:
 
   stepca:
     image: smallstep/step-ca:latest
-    user: "{{ (ds "cfg").merged.os.uid }}:{{ (ds "cfg").merged.os.gid }}"
+    user: {{ printf "%v:%v" (ds "cfg").merged.os.uid (ds "cfg").merged.os.gid | quote }}
     environment:
       DOCKER_STEPCA_INIT: 0
     volumes:
@@ -84,3 +86,44 @@ services:
       - "9000:9000"
     # expose:
     #   - "9000"
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # バケットの Virtual-Host スタイルを有効化
+      MINIO_DOMAIN: {{ (ds "cfg").merged.minio.MINIO_DOMAIN | quote }}
+      # Kong 経由で外部URLを組み立てるための宣言
+      MINIO_SERVER_URL: http://minio:9000
+      MINIO_BROWSER_REDIRECT_URL: {{ (ds "cfg").merged.minio.MINIO_BROWSER_REDIRECT_URL | quote }}
+    # ports:
+    #   - "9000:9000"  # S3 API
+    #   - "9001:9001"  # MinIO Console
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v1
+    ports:
+      - 1411:1411
+    # volumes:
+    #   - "./data:/app/data"
+    # env_file: .env
+    environment:
+      APP_URL: {{ (ds "cfg").merged.pocket_id.APP_URL | quote }}
+      TRUST_PROXY: true  # kong を信用する
+      MAXMIND_LICENSE_KEY:
+      PUID: 1000
+      PGID: 1000
+    healthcheck:
+      test: [ "CMD", "/app/pocket-id", "healthcheck" ]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+  

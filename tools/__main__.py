@@ -171,15 +171,18 @@ def calculate(data: dict):
     external_base_domain = data["merged"]["network"]["external_base_domain"]
 
     calculate = data["calculate"].setdefault("stepca", {})
-    calculate["primary_ca_host"] = "stepca." + external_base_domain
-    calculate["common_name"] = external_base_domain
-
     sans: dict = calculate.setdefault("sans", {})
     sans["base_domain"] = external_base_domain
     sans["stepca"] = "stepca." + external_base_domain
     sans["knative"] = "knative." + external_base_domain
     sans["knative_https"] = "*.default." + "knative." + external_base_domain
     # sans["knative_grpcs"] = "*.default.grpcs." + "knative." + external_base_domain
+    sans["minio"] = "s3." + external_base_domain
+    sans["minio_console"] = "console." + external_base_domain
+    sans["pocket_id"] = "auth." + external_base_domain
+
+    calculate["common_name"] = data["calculate"]["stepca"]["sans"]["base_domain"]
+    calculate["primary_ca_host"] = data["calculate"]["stepca"]["sans"]["stepca"]
 
     calculate = data["calculate"].setdefault("kong", {})
     calculate["domains"] = {**data["calculate"]["stepca"]["sans"]}
@@ -189,6 +192,15 @@ def calculate(data: dict):
         0
     ]  # TODO: 現在若い番号を割り当てているが、複数のコンテナを同時立ち上げると先にipが使われてしまうので、後ろから取った方がよい
     calculate["external_domain"] = data["calculate"]["stepca"]["sans"]["knative"]
+
+    calculate = data["calculate"].setdefault("minio", {})
+    calculate["MINIO_DOMAIN"] = data["calculate"]["stepca"]["sans"]["minio"]
+    calculate["MINIO_BROWSER_REDIRECT_URL"] = (
+        "https://" + data["calculate"]["stepca"]["sans"]["minio_console"]
+    )
+
+    calculate = data["calculate"].setdefault("pocket_id", {})
+    calculate["APP_URL"] = "https://" + data["calculate"]["stepca"]["sans"]["pocket_id"]
 
     data["merged"] = merge(data)
     # print(data["merged"])

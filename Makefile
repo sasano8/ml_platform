@@ -2,6 +2,7 @@ config-init:
 	@python3 -m tools conf_init
 
 config-update:
+	@docker compose down
 	@python3 -m tools conf_calculate
 	@gomplate -d cfg=.env.json -f tools/templates/docker-compose.tmpl.yml -o docker-compose.yml
 	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
@@ -29,7 +30,8 @@ k0s-test:
 	@docker compose exec -it kube /root/setup/04_kube_test.sh
 
 containers-up:
-	@docker compose up -d stepca kube kong
+	@docker compose up -d kube  # ポートが衝突するので先に上げておく
+	@docker compose up -d
 
 env-init:
 	@docker compose down
