@@ -7,7 +7,7 @@ volumes:
 
 networks:
   # ip が変わると kubernetes が動かなくなるので 固定ipで管理
-  fixed_compose_network:
+  default:
     name: fixed_compose_network
     external: true
 
@@ -22,7 +22,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      fixed_compose_network:
+      default:
         ipv4_address: {{ (ds "cfg").merged.kube.internal_ip | quote }}
 #        aliases:
 #          - {{ (ds "cfg").merged.kube.external_domain | quote }}
@@ -41,11 +41,11 @@ services:
       - /dev/kmsg:/dev/kmsg:ro  # カーネルログ
       # - /var/log/pods
       # - ./configs/kube:/mnt/kube
-      - ./volumes/step/certs:/certs:ro
+      # - ./volumes/step/certs:/certs:ro
 
   kong:
-    networks:
-      - fixed_compose_network
+    # networks:
+    #   - default
     image: kong:3.6
     # depends_on:
     #   minio:
@@ -88,6 +88,8 @@ services:
     #   - "9000"
 
   minio:
+    # networks:
+    #   - default
     image: minio/minio:latest
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -108,6 +110,8 @@ services:
       retries: 10
 
   pocket-id:
+    # networks:
+    #   - default
     image: ghcr.io/pocket-id/pocket-id:v1
     ports:
       - 1411:1411

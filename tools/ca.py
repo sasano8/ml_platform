@@ -151,7 +151,6 @@ def _certificate_ca(
         # fmt: on
     ]
 
-    # sans = ["172-31-97-7.sslip.io", "stepca.172-31-97-7.sslip.io", "*.knative.172-31-97-7.sslip.io", "*.default.knative.172-31-97-7.sslip.io", "*.default.grpcs.knative.172-31-97-7.sslip.io"]
     for san in sans.values():
         cmd.append("--san")
         cmd.append(str(san))

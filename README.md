@@ -59,6 +59,10 @@ make config-update
 ## 環境の初期化
 
 ```
+make env-clean
+```
+
+```
 make env-init
 ```
 
