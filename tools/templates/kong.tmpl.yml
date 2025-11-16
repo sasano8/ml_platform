@@ -50,16 +50,15 @@ services:
         strip_path: false
         https_redirect_status_code: 308
 
-  - name: auth-api
-    host: pocket-id
-    port: 1411
-    protocol: http
-    routes:
-      - name: auth-route
-        protocols: ["https"]
-        hosts: [ {{ (ds "cfg").merged.kong.domains.pocket_id | quote }} ]
-        preserve_host: true
-        strip_path: false
+  # - name: auth-api
+  #   host: pocket-id
+  #   port: 1411
+  #   protocol: http
+  #   routes:
+  #     - name: auth-route
+  #       protocols: ["https"]
+  #       preserve_host: true
+  #       strip_path: false
 
   # Minio Console（UI）
   - name: minio-console
@@ -127,3 +126,55 @@ services:
     port: 30080
     protocol: grpc  # 上流はTLSにしない
     tls_verify: null
+
+  # - name: auth-web
+  #   host: zitadel
+  #   port: 3000
+  #   protocol: http
+  #   routes:
+  #     - name: auth-route-web
+  #       protocols: ["https", "http"]
+  #       hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
+  #       # paths:
+  #       # - /ui/v2/login
+  #       preserve_host: true
+  #       strip_path: false
+
+  - name: auth-http
+    host: zitadel
+    port: 8080
+    protocol: http
+    routes:
+      - name: auth-route-http
+        protocols: ["https"]
+        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
+        # paths:
+        # - /ui/v2/login
+        paths:
+          - /
+        preserve_host: true
+        strip_path: false
+
+  - name: auth-login
+    host: zitadel
+    port: 3000
+    protocol: http
+    routes:
+      - name: auth-route-login
+        protocols: ["https"]
+        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
+        paths:
+          - /ui/v2/login
+        preserve_host: true
+        strip_path: false
+
+  - name: auth-grpc
+    host: zitadel
+    port: 8080
+    protocol: grpc
+    routes:
+      - name: auth-route-api
+        protocols: ["grpcs"]
+        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        preserve_host: true
+        strip_path: false

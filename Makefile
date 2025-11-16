@@ -43,17 +43,22 @@ env-init:
 	@make ca-init
 	@make env-setup
 
-env-update:
+env-update-k0s:
 	@docker compose down
 	@make config-update
 	@docker compose up -d kube
-	@make env-setup
-
-env-setup:
-	@make ca-certificate
 	@make k0s-setup
 	@make k0s-test
-	@make containers-up
+	@make env-up
+
+env-update-ca:
+	@make ca-certificate
+
+env-update:
+	@docker compose down
+	@make config-update
+	@make env-update-ca
+	@make env-up
 	@./bootstrap/ca_show_certpath.sh
 
 env-up:

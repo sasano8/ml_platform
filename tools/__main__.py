@@ -136,35 +136,44 @@ def conf_calculate(input: str, output: str):
         f.write("\n")
 
 
+def next_host_after_gateway(subnet: str, gateway: str, num_hosts: int = 1, reverse: bool = True) -> str:
+    import itertools
+    from ipaddress import ip_network, ip_address
+
+    net = ip_network(subnet, strict=False)
+    gw = ip_address(gateway)
+    if gw not in net:
+        raise ValueError(f"gateway {gw} not in subnet {net}")
+
+    def get_hosts(hosts, gateway):
+        """gateway ip 以上のホストipを返す"""
+        for host in hosts:
+            if host > gateway:
+                yield str(host)
+
+    # ネットワーク内の“使用可能ホスト
+    if reverse:
+        hosts = reversed(list(net.hosts()))  # reversed は iterator そのものには適用できない
+    else:
+        hosts = net.hosts()
+
+    hosts = list(itertools.islice(get_hosts(hosts, gw), num_hosts))
+    return hosts
+
 def calculate(data: dict):
-    def next_host_after_gateway(subnet: str, gateway: str) -> str:
-        import itertools
-        from ipaddress import ip_network, ip_address
-
-        net = ip_network(subnet, strict=False)
-        gw = ip_address(gateway)
-        if gw not in net:
-            raise ValueError(f"gateway {gw} not in subnet {net}")
-
-        def get_hosts(hosts):
-            for host in hosts:
-                if host > gw:
-                    yield str(host)
-
-        count = 1
-        hosts = net.hosts()  # ネットワーク内の“使用可能ホスト”を昇順で返す
-        hosts = list(itertools.islice(get_hosts(hosts), count))
-        if len(hosts) != count:
-            raise Exception(f"{len(hosts)} {count}")
-        return hosts
-
     calculate_root = {}
     data["calculate"] = calculate_root
     data.setdefault("override", {})
     network: dict = data["init"]["network"]
     calculate = {}
     calculate_root["network"] = calculate
-    fixed_ips = next_host_after_gateway(network["subnet"], network["gateway"])
+
+    # 指定した数のホストipを逆順で取る(gateway ip 以上)
+    num_hosts = 1
+    fixed_ips = next_host_after_gateway(network["subnet"], network["gateway"], num_hosts=num_hosts, reverse=True)
+    if len(fixed_ips) != num_hosts:
+        raise Exception(f"{len(fixed_ips)} {num_hosts}")
+
     calculate["fixed_ips"] = fixed_ips
 
     data["merged"] = merge(data, exclude=[])
@@ -179,7 +188,11 @@ def calculate(data: dict):
     # sans["knative_grpcs"] = "*.default.grpcs." + "knative." + external_base_domain
     sans["minio"] = "s3." + external_base_domain
     sans["minio_console"] = "console." + external_base_domain
-    sans["pocket_id"] = "auth." + external_base_domain
+    # sans["pocket_id"] = "auth." + external_base_domain
+    sans["zitadel_base"] = "auth." + external_base_domain
+    sans["zitadel_web"] = "web." + sans["zitadel_base"]
+    sans["zitadel_grpc"] = "grpc." + sans["zitadel_base"]
+    # sans["zitadel_api"] = "api.auth." + external_base_domain
 
     calculate["common_name"] = data["calculate"]["stepca"]["sans"]["base_domain"]
     calculate["primary_ca_host"] = data["calculate"]["stepca"]["sans"]["stepca"]
@@ -199,8 +212,8 @@ def calculate(data: dict):
         "https://" + data["calculate"]["stepca"]["sans"]["minio_console"]
     )
 
-    calculate = data["calculate"].setdefault("pocket_id", {})
-    calculate["APP_URL"] = "https://" + data["calculate"]["stepca"]["sans"]["pocket_id"]
+    # calculate = data["calculate"].setdefault("pocket_id", {})
+    # calculate["APP_URL"] = "https://" + data["calculate"]["stepca"]["sans"]["pocket_id"]
 
     data["merged"] = merge(data)
     # print(data["merged"])
