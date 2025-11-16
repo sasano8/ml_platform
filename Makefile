@@ -4,8 +4,9 @@ config-init:
 config-update:
 	@docker compose down
 	@python3 -m tools conf_calculate
+	@mkdir -p storage/cache/kong
 	@gomplate -d cfg=.env.json -f tools/templates/docker-compose.tmpl.yml -o docker-compose.yml
-	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o configs/kong/kong.yaml
+	@gomplate -d cfg=.env.json -f tools/templates/kong.tmpl.yml -o storage/cache/kong/kong.yaml
 
 ca-init:
 	@docker compose down stepca

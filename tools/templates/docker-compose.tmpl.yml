@@ -202,7 +202,7 @@ services:
       # Enable debug logs
       # ZITADEL_LOG_LEVEL: debug
       # Write Access Logs to stdout.
-      # ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED: true
+      ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED: true
 
     healthcheck:
       test:
@@ -218,7 +218,6 @@ services:
       - ./storage/cache/zitadel:/current-dir:delegated
     ports:
       - 8080:8080
-      - 3000:3000
     networks:
       - default
     depends_on:
@@ -227,9 +226,8 @@ services:
 
   # front-end
   zitadel-front:
-    network_mode: service:zitadel  # zitadel コンテナのネットワークに同居させる
-    # ports:
-    #   - 3000:3000  # zitadel で指定した3000は、実際はこのコンテナで待ち受ける
+    ports:
+      - 3000:3000
     restart: unless-stopped
     image: ghcr.io/zitadel/zitadel-login:latest
     # If you can't use the network_mode service:zitadel, you can pass the environment variables ZITADEL_API_URL=http://zitadel:8080 and CUSTOM_REQUEST_HEADERS=Host:localhost instead.
@@ -237,7 +235,7 @@ services:
       - ZITADEL_API_URL=http://zitadel:8080
       - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
       - ZITADEL_SERVICE_USER_TOKEN_FILE=/current-dir/login-client.pat
-      - CUSTOM_REQUEST_HEADERS=Host:{{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}  # Host ヘッダーをつけないと上手くいかない？
+      - CUSTOM_REQUEST_HEADERS=Host:{{ (ds "cfg").merged.kong.domains.zitadel_base }}
     user: "0"
     volumes:
       - ./storage/cache/zitadel:/current-dir:ro

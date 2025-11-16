@@ -66,13 +66,13 @@ make env-clean
 make env-init
 ```
 
+```
+make env-update-k0s
+```
 
-
-
-
-
-
-
+```
+env-update
+```
 
 
 

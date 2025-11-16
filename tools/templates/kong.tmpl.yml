@@ -127,18 +127,23 @@ services:
     protocol: grpc  # 上流はTLSにしない
     tls_verify: null
 
-  # - name: auth-web
-  #   host: zitadel
-  #   port: 3000
-  #   protocol: http
-  #   routes:
-  #     - name: auth-route-web
-  #       protocols: ["https", "http"]
-  #       hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
-  #       # paths:
-  #       # - /ui/v2/login
-  #       preserve_host: true
-  #       strip_path: false
+  - name: auth-login
+    host: zitadel-front
+    port: 3000
+    protocol: http
+    routes:
+      - name: auth-route-login
+        protocols: ["https"]
+        # snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
+        snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        # hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        paths:
+          - /ui/v2/login
+        methods: [ "GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS" ]
+        # paths:
+        #   - /
+        preserve_host: true
+        strip_path: false
 
   - name: auth-http
     host: zitadel
@@ -147,24 +152,11 @@ services:
     routes:
       - name: auth-route-http
         protocols: ["https"]
-        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
-        # paths:
-        # - /ui/v2/login
+        snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        # hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        methods: [ "GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS" ]
         paths:
           - /
-        preserve_host: true
-        strip_path: false
-
-  - name: auth-login
-    host: zitadel
-    port: 3000
-    protocol: http
-    routes:
-      - name: auth-route-login
-        protocols: ["https"]
-        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}, {{ (ds "cfg").merged.kong.domains.zitadel_web | quote }} ]
-        paths:
-          - /ui/v2/login
         preserve_host: true
         strip_path: false
 
@@ -175,6 +167,33 @@ services:
     routes:
       - name: auth-route-api
         protocols: ["grpcs"]
-        hosts: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+        # service: { host: zitadel, port: 8080, protocol: grpc }
         preserve_host: true
         strip_path: false
+
+# kongは services か routes どちらかをトップレベルで定義することができるらしい
+# routes:
+  # - name: zitadel-http
+  #   snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }} ]
+  #   paths:
+  #     - /
+  #   preserve_host: true
+  #   strip_path: false
+  #   service: { host: zitadel, port: 3000, protocol: http }
+
+  # - name: zitadel-route-login
+  #   snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_base | quote }}]
+  #   methods: [ "GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS" ]
+  #   paths:
+  #     - /
+  #     # - /ui/v2/login
+  #   preserve_host: true
+  #   strip_path: false
+  #   service: { name: zitadel-svc-login, host: zitadel, port: 8080, protocol: http }
+
+#   - name: zitadel-grpc
+#     snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_grpc | quote }} ]
+#     preserve_host: true
+#     strip_path: false
+#     service: { host: zitadel, port: 8080, protocol: grpc }
