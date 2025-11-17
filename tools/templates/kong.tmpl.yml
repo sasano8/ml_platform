@@ -192,8 +192,8 @@ services:
   #   strip_path: false
   #   service: { name: zitadel-svc-login, host: zitadel, port: 8080, protocol: http }
 
-#   - name: zitadel-grpc
-#     snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_grpc | quote }} ]
-#     preserve_host: true
-#     strip_path: false
-#     service: { host: zitadel, port: 8080, protocol: grpc }
+  # - name: zitadel-grpc
+  #   snis: [ {{ (ds "cfg").merged.kong.domains.zitadel_grpc | quote }} ]
+  #   preserve_host: true
+  #   strip_path: false
+  #   service: { host: zitadel, port: 8080, protocol: grpc }
