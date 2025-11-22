@@ -62,7 +62,8 @@ services:
       KONG_SSL_CERT_KEY: {{ (ds "cfg").merged.kong.KONG_SSL_CERT_KEY | quote }}
     volumes:
       - ./storage/cache/kong/kong.yaml:/kong/kong.yaml:ro
-      - ./volumes/step/certs:/certs:ro
+      - ./volumes/step/certs:/stepca/certs:ro
+      - ./volumes/step/secrets:/stepca/secrets:ro
     ports:
       - "80:8000"   # Proxy (HTTP)
       - "443:8443"   # Proxy (HTTPS)

@@ -102,14 +102,14 @@ def conf_init(
                 "server_address": ":9000",
                 "ca_name": "Localhost",
                 "out_crt": "/home/step/certs/wild.platform.localtest.me.crt",
-                "out_key": "/home/step/certs/wild.platform.localtest.me.key",
+                "out_key": "/home/step/secrets/wild.platform.localtest.me.key",
             },
             "kube": {
                 "network": network,
             },
             "kong": {
-                "KONG_SSL_CERT": "/certs/fullchain.wild.platform.localtest.me.crt",
-                "KONG_SSL_CERT_KEY": "/certs/wild.platform.localtest.me.key",
+                "KONG_SSL_CERT": "/stepca/certs/fullchain.wild.platform.localtest.me.crt",
+                "KONG_SSL_CERT_KEY": "/stepca/secrets/wild.platform.localtest.me.key",
             },
             "minio": {
                 "minio_root_user": "minioadmin",
